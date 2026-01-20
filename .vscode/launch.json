@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:CSSKit}",
+            "name": "Debug CSSKitExample",
+            "target": "CSSKitExample",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug CSSKitExample"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:CSSKit}",
+            "name": "Release CSSKitExample",
+            "target": "CSSKitExample",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release CSSKitExample"
+        }
+    ]
+}

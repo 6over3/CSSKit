@@ -1,0 +1,192 @@
+disabled_rules:
+  - optional_data_string_conversion
+  - opening_brace
+
+analyzer_rules:
+  - unused_import
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - closure_spacing
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - discouraged_optional_boolean
+  - empty_collection_literal
+  - fatal_error_message
+  - first_where
+  - flatmap_over_map_reduce
+  - force_unwrapping
+  - identical_operands
+  - implicitly_unwrapped_optional
+  - last_where
+  - legacy_multiple
+  - legacy_random
+  - lower_acl_than_parent
+  - modifier_order
+  - overridden_super_call
+  - pattern_matching_keywords
+  - prefer_self_in_static_references
+  - prefer_self_type_over_type_of_self
+  - prefer_zero_over_explicit_init
+  - private_action
+  - private_outlet
+  - prohibited_super_call
+  - reduce_into
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - sorted_first_last
+  - toggle_bool
+  - unavailable_function
+  - unneeded_parentheses_in_closure_argument
+  - unowned_variable_capture
+  - vertical_parameter_alignment_on_call
+  - yoda_condition
+  - explicit_init
+  - joined_default_parameter
+  - implicit_optional_initialization
+  - shorthand_operator
+  - vertical_whitespace_closing_braces
+  - file_header
+  - fallthrough
+  - attributes
+  - implicit_return
+  - redundant_self
+  - collection_alignment
+
+included:
+  - Sources
+
+excluded:
+  - .build
+  - Package.swift
+
+line_length:
+  warning: 100
+  error: 120
+  ignores_urls: true
+  ignores_function_declarations: false
+  ignores_comments: false
+  ignores_interpolated_strings: true
+
+trailing_comma:
+  mandatory_comma: true
+
+opening_brace:
+  ignore_multiline_function_signatures: true
+
+trailing_semicolon:
+  severity: error
+
+identifier_name:
+  min_length:
+    warning: 1
+    error: 0
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - i
+    - j
+    - k
+    - x
+    - y
+    - z
+    - e
+    - el
+  allowed_symbols:
+    - _
+
+type_name:
+  min_length:
+    warning: 3
+    error: 2
+  max_length:
+    warning: 50
+    error: 60
+
+file_length:
+  warning: 500
+  error: 1000
+  ignore_comment_only_lines: true
+
+type_body_length:
+  warning: 300
+  error: 500
+
+function_body_length:
+  warning: 50
+  error: 100
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+nesting:
+  type_level:
+    warning: 3
+  function_level:
+    warning: 3
+
+vertical_whitespace:
+  max_empty_lines: 2
+
+collection_alignment:
+  align_colons: false
+
+colon:
+  flexible_right_spacing: false
+  apply_to_dictionaries: true
+
+comma: warning
+
+syntactic_sugar:
+  severity: warning
+
+control_statement:
+  severity: warning
+
+fallthrough:
+  severity: warning
+
+force_cast:
+  severity: warning
+
+force_try:
+  severity: warning
+
+void_return:
+  severity: warning
+
+return_arrow_whitespace:
+  severity: warning
+
+attributes:
+  always_on_same_line:
+    - "@IBAction"
+    - "@IBOutlet"
+    - "@IBDesignable"
+    - "@IBInspectable"
+    - "@objc"
+    - "@NSManaged"
+    - "@discardableResult"
+  always_on_line_above:
+    - "@available"
+    - "@MainActor"
+    - "@Sendable"
+
+comment_spacing:
+  severity: warning
+
+implicit_return:
+  included:
+    - closure
+    - getter
+
+redundant_self:
+  severity: warning
+
+reporter: "xcode"
