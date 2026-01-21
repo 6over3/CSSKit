@@ -38,6 +38,10 @@ jobs:
             --hosting-base-path CSSKit \
             --output-path docs
 
+      - name: Add root redirect
+        run: |
+          echo '<meta http-equiv="refresh" content="0; url=/CSSKit/documentation/csskit/">' > docs/index.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
