@@ -1,6 +1,6 @@
 # CSSKit
 
-A Swift library for parsing CSS. Conforms to [CSS Syntax Level 3](https://drafts.csswg.org/css-syntax/).
+A Swift package for parsing CSS. Conforms to [CSS Syntax Level 3](https://drafts.csswg.org/css-syntax/).
 
 ## Installation
 
