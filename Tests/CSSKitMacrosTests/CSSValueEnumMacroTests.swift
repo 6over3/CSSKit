@@ -9,7 +9,7 @@ import Testing
 #if canImport(CSSKitMacrosPlugin)
     import CSSKitMacrosPlugin
 
-    private nonisolated(unsafe) let testMacros: [String: Macro.Type] = [
+    private let testMacros: [String: Macro.Type] = [
         "CSSValueEnum": CSSValueEnumMacro.self,
     ]
 #endif

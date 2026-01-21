@@ -34,17 +34,28 @@ extension JSONValue {
         if any == nil || any is NSNull {
             self = .null
         } else if let n = any as? NSNumber {
-            // Check CFBooleanRef to distinguish true booleans from numbers
-            // NSNumber wraps both, but CFBooleanRef is the specific type for booleans
-            if CFGetTypeID(n) == CFBooleanGetTypeID() {
-                self = .bool(n.boolValue)
-            } else if n.doubleValue.truncatingRemainder(dividingBy: 1) == 0,
-                      n.doubleValue >= Double(Int.min), n.doubleValue <= Double(Int.max)
-            {
-                self = .int(n.intValue)
-            } else {
-                self = .double(n.doubleValue)
-            }
+            #if canImport(Darwin)
+                if CFGetTypeID(n) == CFBooleanGetTypeID() {
+                    self = .bool(n.boolValue)
+                } else if n.doubleValue.truncatingRemainder(dividingBy: 1) == 0,
+                          n.doubleValue >= Double(Int.min), n.doubleValue <= Double(Int.max)
+                {
+                    self = .int(n.intValue)
+                } else {
+                    self = .double(n.doubleValue)
+                }
+            #else
+                // On Linux, check objCType to distinguish booleans
+                if n.objCType.pointee == 0x42 /* 'B' */ || n.objCType.pointee == 0x63 /* 'c' */ {
+                    self = .bool(n.boolValue)
+                } else if n.doubleValue.truncatingRemainder(dividingBy: 1) == 0,
+                          n.doubleValue >= Double(Int.min), n.doubleValue <= Double(Int.max)
+                {
+                    self = .int(n.intValue)
+                } else {
+                    self = .double(n.doubleValue)
+                }
+            #endif
         } else if let s = any as? String {
             self = .string(s)
         } else if let arr = any as? [Any] {
