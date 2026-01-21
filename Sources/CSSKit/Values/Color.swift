@@ -612,7 +612,7 @@ protocol ColorParser {
     /// The type that the parser will construct on a successful parse.
     associatedtype Output: ColorFactory
     /// A custom error type that can be returned from the parsing functions.
-    associatedtype Error: Equatable
+    associatedtype Error: Equatable & Sendable
 
     /// Parses an `<angle>` or `<number>`, returning degrees.
     func parseAngleOrNumber(_ input: Parser) -> Result<AngleOrNumber, ParseError<Error>>

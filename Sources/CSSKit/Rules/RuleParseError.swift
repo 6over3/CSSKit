@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 /// A rule parsing error with the associated input slice.
-struct RuleParseError<E: Equatable>: Error, Equatable, @unchecked Sendable {
+struct RuleParseError<E: Equatable & Sendable>: Error, Equatable, Sendable {
     /// The underlying parse error.
     let error: ParseError<E>
 

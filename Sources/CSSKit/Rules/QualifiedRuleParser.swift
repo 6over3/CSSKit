@@ -11,7 +11,7 @@ protocol QualifiedRuleParser {
     associatedtype QualifiedRule
 
     /// The error type that is included in the ParseError value that can be returned.
-    associatedtype QRError: Equatable
+    associatedtype QRError: Equatable & Sendable
 
     /// Parses the prelude of a qualified rule. For style rules, this is a Selector list.
     ///

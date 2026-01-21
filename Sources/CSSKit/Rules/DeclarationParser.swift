@@ -8,7 +8,7 @@ protocol DeclarationParser {
     associatedtype Declaration
 
     /// Error type for declaration parsing failures.
-    associatedtype DeclError: Equatable
+    associatedtype DeclError: Equatable & Sendable
 
     /// Parses the value of a declaration with the given name.
     func parseValue(

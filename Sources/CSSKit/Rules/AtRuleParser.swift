@@ -11,7 +11,7 @@ protocol AtRuleParsingDelegate {
     associatedtype AtRule
 
     /// Error type for at-rule parsing failures.
-    associatedtype AtRuleError: Equatable
+    associatedtype AtRuleError: Equatable & Sendable
 
     /// Parses the prelude of an at-rule with the given name.
     func parsePrelude(

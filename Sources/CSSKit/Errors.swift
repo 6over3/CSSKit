@@ -80,7 +80,7 @@ extension ParseErrorKind: CustomStringConvertible where CustomError: CustomStrin
 }
 
 /// Extensible parse errors that can be encountered by client parsing implementations.
-public struct ParseError<CustomError>: Error, Equatable where CustomError: Equatable {
+public struct ParseError<CustomError>: Error, Equatable where CustomError: Equatable & Sendable {
     /// Details of this error.
     public var kind: ParseErrorKind<CustomError>
 
