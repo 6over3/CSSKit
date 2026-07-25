@@ -344,6 +344,7 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     // MARK: - Writing Mode Properties
 
     case direction
+    case writingMode
     case unicodeBidi
 
     // MARK: - UI Properties
@@ -702,6 +703,7 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case .textEmphasisPosition: "text-emphasis-position"
         case .textShadow: "text-shadow"
         case .direction: "direction"
+        case .writingMode: "writing-mode"
         case .unicodeBidi: "unicode-bidi"
         case .resize: "resize"
         case .cursor: "cursor"
@@ -1033,6 +1035,7 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case "text-emphasis-position": self = .textEmphasisPosition
         case "text-shadow": self = .textShadow
         case "direction": self = .direction
+        case "writing-mode": self = .writingMode
         case "unicode-bidi": self = .unicodeBidi
         case "resize": self = .resize
         case "cursor": self = .cursor
@@ -1149,7 +1152,7 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
             true
 
         // Writing mode
-        case .direction:
+        case .direction, .writingMode:
             true
 
         // Visibility & cursor

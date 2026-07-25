@@ -562,6 +562,9 @@ struct TypedParsingTests {
         }
         #expect(mode == .verticalRightToLeft)
         #expect(declaration.value.inherits)
+        #expect(CSSPropertyId("writing-mode") == .writingMode)
+        #expect(CSSPropertyId.writingMode.name == "writing-mode")
+        #expect(CSSPropertyId.writingMode.inherits)
         #expect(CSSWritingMode.initial == .horizontalTopToBottom)
     }
 }
