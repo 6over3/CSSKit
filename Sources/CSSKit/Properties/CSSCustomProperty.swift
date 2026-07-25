@@ -286,6 +286,14 @@ extension CSSUnparsedProperty {
 }
 
 extension CSSTokenList {
+    /// Parses a complete CSS declaration-value token stream.
+    public static func parse(css: String) -> Result<CSSTokenList, BasicParseError> {
+        let input = Parser(css: css)
+        return parse(input).flatMap { value in
+            input.expectExhausted().map { value }
+        }
+    }
+
     static func parse(_ input: Parser) -> Result<CSSTokenList, BasicParseError> {
         TokenListParser.parse(input)
     }

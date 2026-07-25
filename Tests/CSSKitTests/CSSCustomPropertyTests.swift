@@ -176,6 +176,18 @@ struct CSSCustomPropertyTests {
 
     @Suite("CSSTokenList Tests")
     struct TokenListTests {
+        @Test("Parse a complete public token stream")
+        func parsePublicTokenStream() throws {
+            let value = try CSSTokenList.parse(
+                css: "calc(1rem + env(safe-area-inset-top, 0px))"
+            ).get()
+
+            #expect(
+                value.string()
+                    == "calc(1rem + env(safe-area-inset-top, 0px))"
+            )
+        }
+
         @Test("Empty token list")
         func emptyList() throws {
             let list = CSSTokenList.empty
