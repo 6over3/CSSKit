@@ -229,5 +229,20 @@ struct ShorthandRegistrationTests {
         #expect(width == CSSMaskBorder.initialWidth)
         #expect(outset == CSSMaskBorder.initialOutset)
         #expect(repeatValue == .default)
+
+        var writer = StringCSSWriter()
+        shorthand.serialize(dest: &writer)
+        let roundTrip = try CSSParser(
+            "mask-border: \(writer.result)"
+        ).declarations.first
+        guard case let .maskBorder(reparsed) = roundTrip?.value else {
+            Issue.record("Expected serialized mask-border to remain typed")
+            return
+        }
+        #expect(reparsed == shorthand)
+
+        var initialWriter = StringCSSWriter()
+        CSSMaskBorder.default.serialize(dest: &initialWriter)
+        #expect(initialWriter.result == "none")
     }
 }
