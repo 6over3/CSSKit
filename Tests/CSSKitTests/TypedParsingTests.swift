@@ -7,6 +7,33 @@ import Testing
 
 @Suite("Typed Parsing Tests")
 struct TypedParsingTests {
+    @Test("line-height preserves number and length-percentage grammars")
+    func lineHeightTyped() throws {
+        let declarations = try CSSParser(
+            """
+            line-height: 1.5;
+            line-height: 2rlh;
+            line-height: 125%;
+            """
+        ).declarations
+
+        guard case let .lineHeight(.number(number)) = declarations[0].value,
+              case let .lineHeight(.lengthPercentage(.dimension(length))) =
+              declarations[1].value,
+              case let .lineHeight(.lengthPercentage(.percentage(percent))) =
+              declarations[2].value
+        else {
+            Issue.record(
+                "Expected typed line-height values: \(String(reflecting: declarations.map(\.value)))"
+            )
+            return
+        }
+
+        #expect(number == 1.5)
+        #expect(length == CSSLength(2, .rlh))
+        #expect(percent == CSSPercentage(percent: 125))
+    }
+
     // MARK: - @property Rule
 
     @Test("@property parses syntax as CSSSyntaxString")

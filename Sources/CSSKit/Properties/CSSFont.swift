@@ -565,11 +565,23 @@ extension CSSLineHeight {
             return .success(.normal)
         }
 
-        // Try number
-        if case let .success(token) = input.tryParse({ $0.next() }) {
-            if case let .number(num) = token {
-                return .success(.number(num.value))
+        // Keep the number probe transactional so a length-percentage token is
+        // still available to the next parser.
+        if case let .success(number) = input.tryParse({ parser in
+            let location = parser.currentSourceLocation()
+            switch parser.next() {
+            case let .success(.number(value)):
+                return Result<CSSLineHeight, BasicParseError>
+                    .success(.number(value.value))
+            case let .success(token):
+                return .failure(
+                    location.newBasicUnexpectedTokenError(token)
+                )
+            case let .failure(error):
+                return .failure(error)
             }
+        }) {
+            return .success(number)
         }
 
         // Try length-percentage
