@@ -16,6 +16,10 @@ import CSSKitMacros
 // Flags: .shorthand, .inherits, .webkit, .moz, .ms, .o, .allPrefixes, .transformPrefixes
 
 #CSSPropertyEnum {
+    // MARK: - Universal Shorthand
+
+    _ = ("all", CSSWideKeyword.self, CSSPropertyFlags.shorthand)
+
     // MARK: - Color Properties
 
     _ = ("color", Color.self, CSSPropertyFlags.inherits)

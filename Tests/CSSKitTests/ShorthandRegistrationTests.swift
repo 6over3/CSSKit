@@ -7,6 +7,24 @@ import Testing
 
 @Suite("Shorthand Registration Tests")
 struct ShorthandRegistrationTests {
+    @Test("all is a typed shorthand and publishes the longhand inventory")
+    func allShorthandAndLonghandInventory() throws {
+        let declaration = try #require(
+            try CSSParser("all: initial").declarations.first
+        )
+
+        #expect(CSSPropertyId("all") == .all)
+        #expect(CSSPropertyId.all.isShorthand)
+        #expect(CSSProperty.knownLonghandPropertyIDs.contains(.color))
+        #expect(CSSProperty.knownLonghandPropertyIDs.contains(.unicodeBidi))
+        #expect(!CSSProperty.knownLonghandPropertyIDs.contains(.all))
+        if case let .all(keyword) = declaration.value {
+            #expect(keyword == .initial)
+        } else {
+            Issue.record("Expected a typed all shorthand")
+        }
+    }
+
     @Test("border-color parses one to four typed values")
     func borderColor() throws {
         let declaration = try CSSParser(

@@ -305,6 +305,11 @@ public struct CSSPropertyEnumMacro: DeclarationMacro {
             "        case .\(prop.enumCase): return true"
         }.joined(separator: "\n")
 
+        let knownLonghandPropertyIDs = properties
+            .filter { !$0.isShorthand }
+            .map { "        CSSPropertyId(\"\($0.cssName)\")," }
+            .joined(separator: "\n")
+
         let source = """
         /// A fully-typed CSS property with its parsed value.
         public enum CSSProperty: Equatable, Sendable {
@@ -315,6 +320,11 @@ public struct CSSPropertyEnumMacro: DeclarationMacro {
             case unparsed(CSSUnparsedProperty)
             /// A custom property (CSS variable).
             case custom(CSSCustomProperty)
+
+            /// Every longhand registered with CSSKit, in registry order.
+            public static let knownLonghandPropertyIDs: [CSSPropertyId] = [
+        \(knownLonghandPropertyIDs)
+            ]
 
             /// The CSS property name.
             public var name: String {

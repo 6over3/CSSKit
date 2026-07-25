@@ -5,6 +5,10 @@
 /// Identifies a CSS property by name.
 /// This enum provides type-safe access to CSS property identifiers.
 public enum CSSPropertyId: Hashable, Equatable, Sendable {
+    // MARK: - Universal Shorthand
+
+    case all
+
     // MARK: - Background Properties
 
     case backgroundColor
@@ -445,6 +449,7 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     /// Returns the CSS property name as a string.
     public var name: String {
         switch self {
+        case .all: "all"
         case .backgroundColor: "background-color"
         case .backgroundImage: "background-image"
         case .backgroundPositionX: "background-position-x"
@@ -775,6 +780,7 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     /// This initializer always succeeds - unrecognized names become `.custom(name)`.
     public init(_ name: String) {
         switch name.lowercased() {
+        case "all": self = .all
         case "background-color": self = .backgroundColor
         case "background-image": self = .backgroundImage
         case "background-position-x": self = .backgroundPositionX
@@ -1105,7 +1111,7 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     /// Whether this property is a shorthand property.
     public var isShorthand: Bool {
         switch self {
-        case .background, .border, .borderTop, .borderBottom,
+        case .all, .background, .border, .borderTop, .borderBottom,
              .borderLeft, .borderRight, .borderBlock, .borderBlockStart, .borderBlockEnd,
              .borderInline, .borderInlineStart, .borderInlineEnd, .borderColor,
              .borderBlockColor, .borderInlineColor, .borderStyle, .borderBlockStyle,
