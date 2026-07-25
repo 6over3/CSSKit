@@ -894,6 +894,17 @@ struct CascadeWeightTests {
         #expect(late < early)
     }
 
+    @Test("Layered important beats unlayered important")
+    func layeredImportantBeatsUnlayeredImportant() {
+        let layered = CascadeWeight(
+            isImportant: true,
+            layer: CascadeLayer(parts: ["base"], order: 0)
+        )
+        let unlayered = CascadeWeight(isImportant: true)
+
+        #expect(unlayered < layered)
+    }
+
     @Test("Full cascade order: !important author beats normal inline")
     func fullCascadeOrder() {
         let normalInline = CascadeWeight(isInlineStyle: true)

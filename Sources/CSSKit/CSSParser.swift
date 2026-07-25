@@ -142,11 +142,19 @@ public struct CSSParser<P: AtRuleParser>: Sendable where P: Sendable {
                         }
                         parser.reset(beforeToken)
                         if case let .success(token) = parser.nextIncludingWhitespace() {
-                            valueTokens.append(token.cssString)
+                            collectValueToken(
+                                token,
+                                into: &valueTokens,
+                                parser: parser
+                            )
                         }
                         continue
                     }
-                    valueTokens.append(token.cssString)
+                    collectValueToken(
+                        token,
+                        into: &valueTokens,
+                        parser: parser
+                    )
                 case .failure:
                     break loop
                 }
@@ -167,6 +175,74 @@ public struct CSSParser<P: AtRuleParser>: Sendable where P: Sendable {
         }
 
         return declarations
+    }
+
+    private func collectValueToken(
+        _ token: Token,
+        into tokens: inout [String],
+        parser: Parser
+    ) {
+        switch token {
+        case .function, .parenthesisBlock, .squareBracketBlock,
+             .curlyBracketBlock:
+            tokens.append(token.cssString)
+            guard let (nested, blockType) = parser.enterNestedBlock() else {
+                return
+            }
+            collectNestedTokens(nested, into: &tokens)
+            parser.finishNestedBlock(blockType)
+            switch token {
+            case .function, .parenthesisBlock:
+                tokens.append(")")
+            case .squareBracketBlock:
+                tokens.append("]")
+            case .curlyBracketBlock:
+                tokens.append("}")
+            default:
+                break
+            }
+        default:
+            tokens.append(token.cssString)
+        }
+    }
+
+    private func collectNestedTokens(
+        _ parser: Parser,
+        into tokens: inout [String]
+    ) {
+        var stack: [(parser: Parser, blockType: BlockType, suffix: String)] = []
+        var current = parser
+
+        while true {
+            switch current.nextIncludingWhitespace() {
+            case let .success(token):
+                let suffix: String?
+                switch token {
+                case .function, .parenthesisBlock:
+                    suffix = ")"
+                case .squareBracketBlock:
+                    suffix = "]"
+                case .curlyBracketBlock:
+                    suffix = "}"
+                default:
+                    suffix = nil
+                }
+                tokens.append(token.cssString)
+                if let suffix,
+                   let (nested, blockType) = current.enterNestedBlock()
+                {
+                    stack.append((current, blockType, suffix))
+                    current = nested
+                }
+            case .failure:
+                guard let frame = stack.popLast() else {
+                    return
+                }
+                tokens.append(frame.suffix)
+                frame.parser.finishNestedBlock(frame.blockType)
+                current = frame.parser
+            }
+        }
     }
 
     private func performStylesheetParse() -> CSSParseResult<P.AtRule> {

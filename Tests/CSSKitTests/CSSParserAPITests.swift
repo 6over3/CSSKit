@@ -7,6 +7,83 @@ import Testing
 
 @Suite("CSSParser API Tests")
 struct CSSParserAPITests {
+    @Test("Native nesting preserves qualified rules and following declarations")
+    func nativeNesting() throws {
+        let directlyParsed = try SelectorList.parse(
+            Parser(css: "& > .title"),
+            nesting: .implicit
+        ).get()
+        #expect(directlyParsed.text == "& > .title")
+        let delimitedParser = Parser(css: "& > .title { color: red; }")
+        let delimitedResult: Result<SelectorList, ParseError<Never>> =
+            delimitedParser.parseUntilBefore(.curlyBracketBlock) {
+                SelectorList.parse($0, nesting: .implicit)
+                    .mapError { $0.asParseError() }
+            }
+        #expect(try delimitedResult.get().text == "& > .title")
+
+        let stylesheet = CSSParser("""
+        .card {
+            color: red;
+            & > .title { font-weight: 700; }
+            background-color: white;
+        }
+        """).stylesheet
+
+        let root = try #require(stylesheet.rules.first)
+        guard case let .style(rule) = root else {
+            Issue.record("Expected a style rule")
+            return
+        }
+
+        #expect(rule.declarations.map(\.name) == ["color", "background-color"])
+        #expect(rule.rules.count == 1)
+        guard case let .style(nested) = rule.rules.first else {
+            Issue.record("Expected a nested style rule")
+            return
+        }
+        #expect(nested.selectorText == "& > .title")
+        #expect(nested.declarations.map(\.name) == ["font-weight"])
+    }
+
+    @Test("Nested block at-rules preserve their prelude and rules")
+    func nestedBlockAtRules() throws {
+        let stylesheet = CSSParser("""
+        .card {
+            @media (width > 40rem) {
+                & .title { color: blue; }
+            }
+        }
+        """).stylesheet
+
+        guard case let .style(root) = stylesheet.rules.first,
+              case let .media(media) = root.rules.first
+        else {
+            Issue.record("Expected a style rule containing @media")
+            return
+        }
+        #expect(media.rules.count == 1)
+    }
+
+    @Test("Custom properties preserve case and token structure")
+    func customProperties() throws {
+        let declaration = try #require(
+            CSSParser("--ThemeColor: var(--Fallback, red);")
+                .declarations.first
+        )
+        guard case let .custom(property) = declaration.value else {
+            Issue.record("Expected a custom property")
+            return
+        }
+        #expect(property.name.name == "--ThemeColor")
+        #expect(property.value.tokens.contains {
+            if case let .variable(variable) = $0 {
+                return variable.name.value == "--Fallback"
+            }
+            return false
+        })
+    }
+
     @Suite("Stylesheet")
     struct StylesheetTests {
         @Test("Parse empty stylesheet")

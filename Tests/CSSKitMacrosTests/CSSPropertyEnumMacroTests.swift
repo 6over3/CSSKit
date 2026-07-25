@@ -72,8 +72,14 @@ struct CSSPropertyEnumMacroTests {
                     input: Parser,
                     vendorPrefix: CSSVendorPrefix = .none
                 ) -> Result<CSSProperty, BasicParseError> {
-                    let propertyName = name.lowercased()
+                    let propertyName = name.hasPrefix("--") ? name : name.lowercased()
                     let startState = input.state()
+
+                    if propertyName.hasPrefix("--") {
+                        let customName = CSSCustomPropertyName(propertyName)
+                        return CSSCustomProperty.parse(name: customName, input: input)
+                            .map(CSSProperty.custom)
+                    }
 
                     switch propertyName {
                     case "color":

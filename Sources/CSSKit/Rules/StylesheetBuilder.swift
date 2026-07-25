@@ -186,7 +186,10 @@ extension StylesheetBuilder {
             return .success(rule)
 
         case let .qualifiedRule(selectors):
-            let (declarations, nestedRules) = parseBlockContents(input)
+            let (declarations, nestedRules) = parseBlockContents(
+                input,
+                allowsNesting: true
+            )
             return .success(.style(StyleRule(
                 selectors: selectors,
                 declarations: declarations,
@@ -491,7 +494,10 @@ extension StylesheetBuilder {
             return .mozDocument(MozDocumentRule(rules: nestedRules, location: location))
 
         case "nest":
-            let (declarations, nestedRules) = parseBlockContents(input)
+            let (declarations, nestedRules) = parseBlockContents(
+                input,
+                allowsNesting: true
+            )
             let selectors = prelude.isEmpty ? nil : try? SelectorList.parse(Parser(css: prelude)).get()
             return .nesting(NestingRule(
                 selectors: selectors,
@@ -845,14 +851,23 @@ extension StylesheetBuilder {
 // MARK: - Block Parsing
 
 extension StylesheetBuilder {
-    private func parseBlockContents(_ input: Parser) -> ([CSSKit.Declaration], [Rule<P.AtRule>]) {
+    private func parseBlockContents(
+        _ input: Parser,
+        allowsNesting: Bool = false
+    ) -> ([CSSKit.Declaration], [Rule<P.AtRule>]) {
         typealias Frame = RuleParsingFrame<P.AtRule>
 
         var stack: [Frame] = []
-        var current = Frame(parser: input, blockType: nil, pendingRule: .topLevel)
+        var current = Frame(
+            parser: input,
+            blockType: nil,
+            pendingRule: .topLevel,
+            allowsNesting: allowsNesting
+        )
 
         while true {
             current.parser.skipWhitespace()
+            let itemStart = current.parser.state()
 
             guard case let .success(token) = current.parser.nextIncludingWhitespaceAndComments() else {
                 let assembledRule = assembleRule(
@@ -884,37 +899,59 @@ extension StylesheetBuilder {
                 continue
 
             case let .atKeyword(name):
-                processAtKeyword(name: name, current: &current, stack: &stack)
+                processAtKeyword(
+                    name: name,
+                    start: itemStart,
+                    current: &current,
+                    stack: &stack
+                )
 
             case let .ident(name):
-                processIdent(name: name, current: &current, stack: &stack)
+                processIdent(
+                    name: name,
+                    start: itemStart,
+                    current: &current,
+                    stack: &stack
+                )
 
             default:
-                processDefault(token: token, current: &current, stack: &stack)
+                current.parser.reset(itemStart)
+                processAsQualifiedRule(
+                    start: itemStart,
+                    current: &current,
+                    stack: &stack
+                )
             }
         }
     }
 
     private func processAtKeyword(
         name: Lexeme,
+        start: ParserState,
         current: inout RuleParsingFrame<P.AtRule>,
         stack: inout [RuleParsingFrame<P.AtRule>]
     ) {
-        let start = current.parser.state()
-        let prelude = collectTokensAsString(current.parser)
+        let delimiters: Delimiters = .semicolon.union(.curlyBracketBlock)
+        let preludeResult: Result<String, ParseError<Never>> =
+            current.parser.parseUntilBefore(delimiters) {
+                .success(collectTokensAsString($0))
+            }
+        let prelude = (try? preludeResult.get()) ?? ""
 
-        if case .success = current.parser.tryParse({ $0.expectCurlyBracketBlock() }) {
+        if case .success(.curlyBracketBlock) = current.parser.next() {
             if let (nested, blockType) = current.parser.enterNestedBlock() {
                 if let pending = classifyBlockAtRule(
                     name: String(name.value),
                     prelude: prelude,
                     location: start.sourceLocation()
                 ) {
+                    let allowsNesting = current.allowsNesting
                     stack.append(current)
                     current = RuleParsingFrame(
                         parser: nested,
                         blockType: blockType,
-                        pendingRule: pending
+                        pendingRule: pending,
+                        allowsNesting: allowsNesting
                     )
                     return
                 } else {
@@ -943,11 +980,10 @@ extension StylesheetBuilder {
 
     private func processIdent(
         name: Lexeme,
+        start: ParserState,
         current: inout RuleParsingFrame<P.AtRule>,
         stack: inout [RuleParsingFrame<P.AtRule>]
     ) {
-        let start = current.parser.state()
-
         if case .success = current.parser.tryParse({ $0.expectColon() }) {
             var valueTokens: [String] = []
             var isImportant = false
@@ -1003,36 +1039,36 @@ extension StylesheetBuilder {
         }
 
         current.parser.reset(start)
-        processAsQualifiedRule(current: &current, stack: &stack)
-    }
-
-    private func processDefault(
-        token _: Token,
-        current: inout RuleParsingFrame<P.AtRule>,
-        stack: inout [RuleParsingFrame<P.AtRule>]
-    ) {
-        processAsQualifiedRule(current: &current, stack: &stack)
+        processAsQualifiedRule(start: start, current: &current, stack: &stack)
     }
 
     private func processAsQualifiedRule(
+        start: ParserState,
         current: inout RuleParsingFrame<P.AtRule>,
         stack: inout [RuleParsingFrame<P.AtRule>]
     ) {
-        let start = current.parser.state()
-
-        let selectors: SelectorList? = if case let .success(parsed) = SelectorList.parse(current.parser) {
+        let selectorResult: Result<SelectorList, ParseError<Never>> =
+            current.parser.parseUntilBefore(.curlyBracketBlock) { input in
+                SelectorList.parse(
+                    input,
+                    nesting: current.allowsNesting ? .implicit : .none
+                )
+                    .mapError { $0.asParseError() }
+            }
+        let selectors: SelectorList? = if case let .success(parsed) = selectorResult {
             parsed
         } else {
             nil
         }
 
-        if case .success = current.parser.tryParse({ $0.expectCurlyBracketBlock() }) {
+        if case .success(.curlyBracketBlock) = current.parser.next() {
             if let (nested, blockType) = current.parser.enterNestedBlock() {
                 stack.append(current)
                 current = RuleParsingFrame(
                     parser: nested,
                     blockType: blockType,
-                    pendingRule: .styleRule(selectors: selectors, location: start.sourceLocation())
+                    pendingRule: .styleRule(selectors: selectors, location: start.sourceLocation()),
+                    allowsNesting: true
                 )
                 return
             }
@@ -1348,6 +1384,7 @@ private struct RuleParsingFrame<R: CSSSerializable & Sendable & Equatable> {
     var parser: Parser
     var blockType: BlockType?
     var pendingRule: PendingAtRule
+    var allowsNesting: Bool
     var declarations: [CSSKit.Declaration] = []
     var nestedRules: [Rule<R>] = []
 }

@@ -92,14 +92,13 @@ public struct CascadeWeight: Comparable, Sendable {
     }
 
     private var layerScore: Int {
-        guard let layer else {
-            return Int.max
-        }
         if isImportant {
+            guard let layer else {
+                return Int.min
+            }
             return -layer.order
-        } else {
-            return layer.order
         }
+        return layer?.order ?? Int.max
     }
 }
 
