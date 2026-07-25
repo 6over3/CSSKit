@@ -469,21 +469,31 @@ public enum MediaFeature: Equatable, Sendable, Hashable {
     case plain(name: String, value: MediaFeatureValue)
     /// A range feature (e.g., `(width > 400px)`).
     case range(name: String, comparison: MediaFeatureComparison, value: MediaFeatureValue)
-    /// An interval feature (e.g., `(400px < width < 800px)`).
-    case interval(name: String, lower: MediaFeatureValue, upper: MediaFeatureValue)
+    /// An interval feature (e.g., `(400px < width <= 800px)`).
+    ///
+    /// Comparisons are normalized to put the feature on the left:
+    /// `width > lower` and `width <= upper` in the example above.
+    case interval(
+        name: String,
+        lower: MediaFeatureValue,
+        lowerComparison: MediaFeatureComparison,
+        upper: MediaFeatureValue,
+        upperComparison: MediaFeatureComparison
+    )
 }
 
 extension MediaFeature {
     static func parse(_ input: Parser) -> Result<MediaFeature, BasicParseError> {
         input.skipWhitespace()
 
-        // Check for interval syntax like `400px < width < 800px`
+        // Check for value-first range syntax such as
+        // `400px < width`, `400px < width <= 800px`, or
+        // `800px >= width > 400px`.
         // Interval starts with dimension/number, not ident
         let state = input.state()
         if let leadingValue = tryParseDimensionOrNumber(input) {
             input.skipWhitespace()
-            if case .success = input.tryParse({ $0.expectDelim("<") }) {
-                let leq = input.tryParse { $0.expectDelim("=") }.isSuccess
+            if let leadingComparison = tryParseComparison(input) {
                 input.skipWhitespace()
 
                 guard case let .success(nameIdent) = input.expectIdent() else {
@@ -492,15 +502,26 @@ extension MediaFeature {
                 let name = String(nameIdent.value)
                 input.skipWhitespace()
 
-                if case .success = input.tryParse({ $0.expectDelim("<") }) {
-                    _ = input.tryParse { $0.expectDelim("=") }
+                if let trailingComparison = tryParseComparison(input) {
                     input.skipWhitespace()
-                    if let upperValue = tryParseValue(input) {
-                        return .success(.interval(name: name, lower: leadingValue, upper: upperValue))
+                    if let trailingValue = tryParseValue(input),
+                       let interval = normalizedInterval(
+                           name: name,
+                           leadingValue: leadingValue,
+                           leadingComparison: leadingComparison,
+                           trailingValue: trailingValue,
+                           trailingComparison: trailingComparison
+                       )
+                    {
+                        return .success(interval)
                     }
                 }
-                // Single comparison: value < name
-                return .success(.range(name: name, comparison: leq ? .lessThanOrEqual : .lessThan, value: leadingValue))
+                // Normalize `value < feature` to `feature > value`.
+                return .success(.range(
+                    name: name,
+                    comparison: inverted(leadingComparison),
+                    value: leadingValue
+                ))
             }
             // Not interval syntax, reset and parse normally
             input.reset(state)
@@ -547,6 +568,69 @@ extension MediaFeature {
         }
 
         return .success(.boolean(name: name))
+    }
+
+    private static func tryParseComparison(
+        _ input: Parser
+    ) -> MediaFeatureComparison? {
+        if case .success = input.tryParse({ $0.expectDelim("<") }) {
+            return input.tryParse { $0.expectDelim("=") }.isSuccess
+                ? .lessThanOrEqual : .lessThan
+        }
+        if case .success = input.tryParse({ $0.expectDelim(">") }) {
+            return input.tryParse { $0.expectDelim("=") }.isSuccess
+                ? .greaterThanOrEqual : .greaterThan
+        }
+        if case .success = input.tryParse({ $0.expectDelim("=") }) {
+            return .equal
+        }
+        return nil
+    }
+
+    private static func inverted(
+        _ comparison: MediaFeatureComparison
+    ) -> MediaFeatureComparison {
+        switch comparison {
+        case .equal: .equal
+        case .lessThan: .greaterThan
+        case .lessThanOrEqual: .greaterThanOrEqual
+        case .greaterThan: .lessThan
+        case .greaterThanOrEqual: .lessThanOrEqual
+        }
+    }
+
+    private static func normalizedInterval(
+        name: String,
+        leadingValue: MediaFeatureValue,
+        leadingComparison: MediaFeatureComparison,
+        trailingValue: MediaFeatureValue,
+        trailingComparison: MediaFeatureComparison
+    ) -> MediaFeature? {
+        switch (leadingComparison, trailingComparison) {
+        case (.lessThan, .lessThan), (.lessThan, .lessThanOrEqual),
+             (.lessThanOrEqual, .lessThan),
+             (.lessThanOrEqual, .lessThanOrEqual):
+            return .interval(
+                name: name,
+                lower: leadingValue,
+                lowerComparison: inverted(leadingComparison),
+                upper: trailingValue,
+                upperComparison: trailingComparison
+            )
+        case (.greaterThan, .greaterThan),
+             (.greaterThan, .greaterThanOrEqual),
+             (.greaterThanOrEqual, .greaterThan),
+             (.greaterThanOrEqual, .greaterThanOrEqual):
+            return .interval(
+                name: name,
+                lower: trailingValue,
+                lowerComparison: trailingComparison,
+                upper: leadingValue,
+                upperComparison: inverted(leadingComparison)
+            )
+        default:
+            return nil
+        }
     }
 
     private static func tryParseDimensionOrNumber(_ input: Parser) -> MediaFeatureValue? {
@@ -627,11 +711,17 @@ extension MediaFeature: CSSSerializable {
             comparison.serialize(dest: &dest)
             value.serialize(dest: &dest)
 
-        case let .interval(name, lower, upper):
+        case let .interval(
+            name,
+            lower,
+            lowerComparison,
+            upper,
+            upperComparison
+        ):
             lower.serialize(dest: &dest)
-            dest.write(" < ")
+            Self.inverted(lowerComparison).serialize(dest: &dest)
             dest.write(name)
-            dest.write(" < ")
+            upperComparison.serialize(dest: &dest)
             upper.serialize(dest: &dest)
         }
     }

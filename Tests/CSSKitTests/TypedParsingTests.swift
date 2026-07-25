@@ -423,6 +423,81 @@ struct TypedParsingTests {
         }
     }
 
+    @Test("MediaFeature normalizes value-first ranges")
+    func mediaFeatureValueFirstRange() {
+        let parser = CSSParser(
+            "@media (400px < width) { div { color: blue; } }"
+        )
+        guard case let .media(media) = parser.stylesheet.rules.first,
+              case let .feature(feature) = media.query.queries.first?.condition,
+              case let .range(name, comparison, value) = feature
+        else {
+            Issue.record("Expected range media feature")
+            return
+        }
+
+        #expect(name == "width")
+        #expect(comparison == .greaterThan)
+        #expect(value == .length(.px(400)))
+        #expect(parser.stylesheet.string().contains("width > 400px"))
+    }
+
+    @Test("MediaFeature preserves inclusive interval bounds")
+    func mediaFeatureIntervalBounds() {
+        let parser = CSSParser(
+            "@media (400px < width <= 800px) { div { color: blue; } }"
+        )
+        guard case let .media(media) = parser.stylesheet.rules.first,
+              case let .feature(feature) = media.query.queries.first?.condition,
+              case let .interval(
+                  name,
+                  lower,
+                  lowerComparison,
+                  upper,
+                  upperComparison
+              ) = feature
+        else {
+            Issue.record("Expected interval media feature")
+            return
+        }
+
+        #expect(name == "width")
+        #expect(lower == .length(.px(400)))
+        #expect(lowerComparison == .greaterThan)
+        #expect(upper == .length(.px(800)))
+        #expect(upperComparison == .lessThanOrEqual)
+        #expect(
+            parser.stylesheet.string()
+                .contains("400px < width <= 800px")
+        )
+    }
+
+    @Test("MediaFeature normalizes descending intervals")
+    func mediaFeatureDescendingInterval() {
+        let parser = CSSParser(
+            "@media (800px >= width > 400px) { div { color: blue; } }"
+        )
+        guard case let .media(media) = parser.stylesheet.rules.first,
+              case let .feature(feature) = media.query.queries.first?.condition,
+              case let .interval(
+                  name,
+                  lower,
+                  lowerComparison,
+                  upper,
+                  upperComparison
+              ) = feature
+        else {
+            Issue.record("Expected interval media feature")
+            return
+        }
+
+        #expect(name == "width")
+        #expect(lower == .length(.px(400)))
+        #expect(lowerComparison == .greaterThan)
+        #expect(upper == .length(.px(800)))
+        #expect(upperComparison == .lessThanOrEqual)
+    }
+
     @Test("MediaFeature parses boolean syntax")
     func mediaFeatureBoolean() {
         let css = "@media (hover) { a { text-decoration: underline; } }"
