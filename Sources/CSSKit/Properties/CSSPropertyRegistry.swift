@@ -344,6 +344,13 @@ import CSSKitMacros
     _ = ("mask-size", CSSBackgroundSizeList.self, CSSPropertyFlags.webkit)
     _ = ("mask-composite", CSSMaskCompositeList.self, CSSPropertyFlags.webkit)
     _ = ("mask-type", CSSMaskType.self)
+    _ = ("mask-border", CSSMaskBorder.self, CSSPropertyFlags.shorthand)
+    _ = ("mask-border-source", CSSImage.self)
+    _ = ("mask-border-mode", CSSMaskBorderMode.self)
+    _ = ("mask-border-slice", CSSBorderImageSlice.self)
+    _ = ("mask-border-width", CSSRect<CSSBorderImageSideWidth>.self)
+    _ = ("mask-border-outset", CSSRect<CSSLengthOrNumber>.self)
+    _ = ("mask-border-repeat", CSSBorderImageRepeat.self)
     _ = ("clip-path", CSSClipPath.self, CSSPropertyFlags.webkit)
 
     // MARK: - SVG Properties

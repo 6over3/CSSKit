@@ -422,6 +422,10 @@ extension CSSMaskType: CSSInitialValue {
     public static var initial: CSSMaskType { .luminance }
 }
 
+extension CSSMaskBorderMode: CSSInitialValue {
+    public static var initial: CSSMaskBorderMode { .alpha }
+}
+
 extension CSSClipPath: CSSInitialValue {
     public static var initial: CSSClipPath { .none }
 }

@@ -188,4 +188,46 @@ struct ShorthandRegistrationTests {
         #expect(images.values.count == 2)
         #expect(modes.values == [.alpha, .luminance])
     }
+
+    @Test("mask-border shorthand and longhands use CSS Masking initial grammars")
+    func maskBorder() throws {
+        let declarations = try CSSParser(
+            """
+            mask-border:
+              url(mask.png) luminance 25 fill / 10px / 2 repeat round;
+            mask-border-source: none;
+            mask-border-mode: alpha;
+            mask-border-slice: 0;
+            mask-border-width: auto;
+            mask-border-outset: 0;
+            mask-border-repeat: stretch;
+            """
+        ).declarations
+
+        guard case let .maskBorder(shorthand) = declarations[0].value,
+              case .maskBorderSource(.none) = declarations[1].value,
+              case .maskBorderMode(.alpha) = declarations[2].value,
+              case let .maskBorderSlice(slice) = declarations[3].value,
+              case let .maskBorderWidth(width) = declarations[4].value,
+              case let .maskBorderOutset(outset) = declarations[5].value,
+              case let .maskBorderRepeat(repeatValue) = declarations[6].value
+        else {
+            Issue.record(
+                "Expected typed mask-border values: \(String(reflecting: declarations.map(\.value)))"
+            )
+            return
+        }
+
+        #expect(shorthand.source != .none)
+        #expect(shorthand.mode == .luminance)
+        #expect(shorthand.slice.fill)
+        #expect(
+            shorthand.repeat
+                == CSSBorderImageRepeat(horizontal: .repeat, vertical: .round)
+        )
+        #expect(slice == CSSMaskBorder.initialSlice)
+        #expect(width == CSSMaskBorder.initialWidth)
+        #expect(outset == CSSMaskBorder.initialOutset)
+        #expect(repeatValue == .default)
+    }
 }

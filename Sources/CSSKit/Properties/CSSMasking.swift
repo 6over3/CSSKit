@@ -232,6 +232,61 @@ public enum CSSMaskBorderMode: String, Equatable, Sendable, Hashable {
     public static let `default`: CSSMaskBorderMode = .alpha
 }
 
+/// A value for the `mask-border` shorthand property.
+///
+/// The geometry components share the border-image value grammars, but use the
+/// mask-border initial values defined by CSS Masking Level 1.
+public struct CSSMaskBorder: Equatable, Sendable, Hashable {
+    /// The image used as the mask border.
+    public var source: CSSImage
+    /// The inward offsets used to divide the source image.
+    public var slice: CSSBorderImageSlice
+    /// The widths of the mask-border image regions.
+    public var width: CSSRect<CSSBorderImageSideWidth>
+    /// The distance the mask border extends beyond the border box.
+    public var outset: CSSRect<CSSLengthOrNumber>
+    /// How edge regions are scaled and tiled.
+    public var `repeat`: CSSBorderImageRepeat
+    /// Whether the source image is interpreted as an alpha or luminance mask.
+    public var mode: CSSMaskBorderMode
+
+    /// The initial `mask-border-slice` value.
+    public static var initialSlice: CSSBorderImageSlice {
+        CSSBorderImageSlice(
+            offsets: CSSRect(all: .number(CSSNumber(0)))
+        )
+    }
+
+    /// The initial `mask-border-width` value.
+    public static var initialWidth: CSSRect<CSSBorderImageSideWidth> {
+        CSSRect(all: .auto)
+    }
+
+    /// The initial `mask-border-outset` value.
+    public static var initialOutset: CSSRect<CSSLengthOrNumber> {
+        CSSRect(all: .number(0))
+    }
+
+    public init(
+        source: CSSImage = .none,
+        slice: CSSBorderImageSlice = Self.initialSlice,
+        width: CSSRect<CSSBorderImageSideWidth> = Self.initialWidth,
+        outset: CSSRect<CSSLengthOrNumber> = Self.initialOutset,
+        repeat: CSSBorderImageRepeat = .default,
+        mode: CSSMaskBorderMode = .alpha
+    ) {
+        self.source = source
+        self.slice = slice
+        self.width = width
+        self.outset = outset
+        self.repeat = `repeat`
+        self.mode = mode
+    }
+
+    /// The initial mask-border value.
+    public static var `default`: Self { Self() }
+}
+
 // MARK: - Parsing
 
 extension CSSMaskType {
@@ -522,6 +577,41 @@ extension CSSMaskBorderMode {
     }
 }
 
+extension CSSMaskBorder {
+    static func parse(
+        _ input: Parser
+    ) -> Result<CSSMaskBorder, BasicParseError> {
+        var mode: CSSMaskBorderMode?
+        let components = parseBorderImageComponents(
+            input,
+            consumeAdditional: { parser in
+                guard mode == nil,
+                      case let .success(value) = parser.tryParse({
+                          CSSMaskBorderMode.parse($0)
+                      })
+                else {
+                    return false
+                }
+                mode = value
+                return true
+            }
+        )
+
+        guard components.hasValue || mode != nil else {
+            return .failure(input.newBasicError(.endOfInput))
+        }
+
+        return .success(CSSMaskBorder(
+            source: components.source ?? .none,
+            slice: components.slice ?? CSSMaskBorder.initialSlice,
+            width: components.width ?? CSSMaskBorder.initialWidth,
+            outset: components.outset ?? CSSMaskBorder.initialOutset,
+            repeat: components.repeat ?? .default,
+            mode: mode ?? .alpha
+        ))
+    }
+}
+
 // MARK: - ToCss
 
 extension CSSMaskType: CSSSerializable {
@@ -635,5 +725,52 @@ extension CSSClipPath: CSSSerializable {
 extension CSSMaskBorderMode: CSSSerializable {
     public func serialize(dest: inout some CSSWriter) {
         dest.write(rawValue)
+    }
+}
+
+extension CSSMaskBorder: CSSSerializable {
+    public func serialize(dest: inout some CSSWriter) {
+        var hasOutput = false
+
+        if source != .none {
+            source.serialize(dest: &dest)
+            hasOutput = true
+        }
+
+        let hasSlice = slice != Self.initialSlice
+        let hasWidth = width != Self.initialWidth
+        let hasOutset = outset != Self.initialOutset
+        if hasSlice || hasWidth || hasOutset {
+            if hasOutput { dest.write(" ") }
+            slice.serialize(dest: &dest)
+            hasOutput = true
+
+            if hasWidth || hasOutset {
+                dest.write(" / ")
+            }
+            if hasWidth {
+                width.serialize(dest: &dest)
+            }
+            if hasOutset {
+                dest.write(" / ")
+                outset.serialize(dest: &dest)
+            }
+        }
+
+        if `repeat` != .default {
+            if hasOutput { dest.write(" ") }
+            `repeat`.serialize(dest: &dest)
+            hasOutput = true
+        }
+
+        if mode != .alpha {
+            if hasOutput { dest.write(" ") }
+            mode.serialize(dest: &dest)
+            hasOutput = true
+        }
+
+        if !hasOutput {
+            dest.write("none")
+        }
     }
 }

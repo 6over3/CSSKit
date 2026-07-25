@@ -177,11 +177,23 @@ extension CSSBorderImageSideWidth {
             return .success(.auto)
         }
 
-        // Try number first
-        if case let .success(token) = input.tryParse({ $0.next() }) {
-            if case let .number(numeric) = token {
-                return .success(.number(numeric.value))
+        // Keep the number probe transactional so a length-percentage token is
+        // still available to the next parser.
+        if case let .success(number) = input.tryParse({ parser in
+            let location = parser.currentSourceLocation()
+            switch parser.next() {
+            case let .success(.number(numeric)):
+                return Result<CSSBorderImageSideWidth, BasicParseError>
+                    .success(.number(numeric.value))
+            case let .success(token):
+                return .failure(
+                    location.newBasicUnexpectedTokenError(token)
+                )
+            case let .failure(error):
+                return .failure(error)
             }
+        }) {
+            return .success(number)
         }
 
         // Try length-percentage
@@ -255,104 +267,134 @@ extension CSSBorderImageSlice {
     }
 }
 
+struct CSSBorderImageComponents {
+    var source: CSSImage?
+    var slice: CSSBorderImageSlice?
+    var width: CSSRect<CSSBorderImageSideWidth>?
+    var outset: CSSRect<CSSLengthOrNumber>?
+    var `repeat`: CSSBorderImageRepeat?
+
+    var hasValue: Bool {
+        source != nil || slice != nil || width != nil || outset != nil
+            || `repeat` != nil
+    }
+}
+
+func parseBorderImageComponents(
+    _ input: Parser,
+    consumeAdditional: ((Parser) -> Bool)? = nil
+) -> CSSBorderImageComponents {
+    var components = CSSBorderImageComponents()
+
+    while true {
+        if consumeAdditional?(input) == true {
+            continue
+        }
+
+        if components.slice == nil,
+           case let .success(value) = input.tryParse({
+               CSSBorderImageSlice.parse($0)
+           })
+        {
+            components.slice = value
+
+            if input.tryParse({ $0.expectDelim("/") }).isOK {
+                let widths = parseRectValues(
+                    input,
+                    parse: CSSBorderImageSideWidth.parse
+                )
+                if let widths {
+                    components.width = widths
+                }
+
+                if input.tryParse({ $0.expectDelim("/") }).isOK {
+                    let outsets = parseRectValues(
+                        input,
+                        parse: CSSLengthOrNumber.parse
+                    )
+                    if let outsets {
+                        components.outset = outsets
+                    }
+                }
+            }
+            continue
+        }
+
+        if components.source == nil,
+           case let .success(value) = input.tryParse({
+               CSSImage.parse($0)
+           })
+        {
+            components.source = value
+            continue
+        }
+
+        if components.repeat == nil,
+           case let .success(value) = input.tryParse({
+               CSSBorderImageRepeat.parse($0)
+           })
+        {
+            components.repeat = value
+            continue
+        }
+
+        break
+    }
+
+    return components
+}
+
+private func parseRectValues<Value>(
+    _ input: Parser,
+    parse: (Parser) -> Result<Value, BasicParseError>
+) -> CSSRect<Value>?
+where Value: Equatable & Sendable & CSSSerializable {
+    var values: [Value] = []
+    values.reserveCapacity(4)
+
+    while values.count < 4,
+          case let .success(value) = input.tryParse(parse)
+    {
+        values.append(value)
+    }
+
+    switch values.count {
+    case 1:
+        return CSSRect(all: values[0])
+    case 2:
+        return CSSRect(vertical: values[0], horizontal: values[1])
+    case 3:
+        return CSSRect(
+            top: values[0],
+            horizontal: values[1],
+            bottom: values[2]
+        )
+    case 4:
+        return CSSRect(
+            top: values[0],
+            right: values[1],
+            bottom: values[2],
+            left: values[3]
+        )
+    default:
+        return nil
+    }
+}
+
 extension CSSBorderImage {
     static func parse(_ input: Parser) -> Result<CSSBorderImage, BasicParseError> {
-        var source: CSSImage?
-        var slice: CSSBorderImageSlice?
-        var width: CSSRect<CSSBorderImageSideWidth>?
-        var outset: CSSRect<CSSLengthOrNumber>?
-        var repeatVal: CSSBorderImageRepeat?
-
-        while true {
-            if slice == nil {
-                if case let .success(value) = input.tryParse({ CSSBorderImageSlice.parse($0) }) {
-                    slice = value
-                    // Try to parse width and outset
-                    if input.tryParse({ $0.expectDelim("/") }).isOK {
-                        // Parse width
-                        var widthValues: [CSSBorderImageSideWidth] = []
-                        while widthValues.count < 4 {
-                            if case let .success(w) = input.tryParse({ CSSBorderImageSideWidth.parse($0) }) {
-                                widthValues.append(w)
-                            } else {
-                                break
-                            }
-                        }
-
-                        if !widthValues.isEmpty {
-                            switch widthValues.count {
-                            case 1:
-                                width = CSSRect(all: widthValues[0])
-                            case 2:
-                                width = CSSRect(vertical: widthValues[0], horizontal: widthValues[1])
-                            case 3:
-                                width = CSSRect(top: widthValues[0], horizontal: widthValues[1], bottom: widthValues[2])
-                            case 4:
-                                width = CSSRect(top: widthValues[0], right: widthValues[1], bottom: widthValues[2], left: widthValues[3])
-                            default:
-                                break
-                            }
-                        }
-
-                        // Try to parse outset
-                        if input.tryParse({ $0.expectDelim("/") }).isOK {
-                            var outsetValues: [CSSLengthOrNumber] = []
-                            while outsetValues.count < 4 {
-                                if case let .success(o) = input.tryParse({ CSSLengthOrNumber.parse($0) }) {
-                                    outsetValues.append(o)
-                                } else {
-                                    break
-                                }
-                            }
-
-                            if !outsetValues.isEmpty {
-                                switch outsetValues.count {
-                                case 1:
-                                    outset = CSSRect(all: outsetValues[0])
-                                case 2:
-                                    outset = CSSRect(vertical: outsetValues[0], horizontal: outsetValues[1])
-                                case 3:
-                                    outset = CSSRect(top: outsetValues[0], horizontal: outsetValues[1], bottom: outsetValues[2])
-                                case 4:
-                                    outset = CSSRect(top: outsetValues[0], right: outsetValues[1], bottom: outsetValues[2], left: outsetValues[3])
-                                default:
-                                    break
-                                }
-                            }
-                        }
-                    }
-                    continue
-                }
-            }
-
-            if source == nil {
-                if case let .success(value) = input.tryParse({ CSSImage.parse($0) }) {
-                    source = value
-                    continue
-                }
-            }
-
-            if repeatVal == nil {
-                if case let .success(value) = input.tryParse({ CSSBorderImageRepeat.parse($0) }) {
-                    repeatVal = value
-                    continue
-                }
-            }
-
-            break
+        let components = parseBorderImageComponents(input)
+        guard components.hasValue else {
+            return .failure(input.newBasicError(.endOfInput))
         }
 
-        if source != nil || slice != nil || width != nil || outset != nil || repeatVal != nil {
-            return .success(CSSBorderImage(
-                source: source ?? .none,
-                slice: slice ?? .default,
-                width: width ?? CSSRect(all: .number(1)),
-                outset: outset ?? CSSRect(all: .number(0)),
-                repeat: repeatVal ?? .default
-            ))
-        }
-
-        return .failure(input.newBasicError(.endOfInput))
+        return .success(CSSBorderImage(
+            source: components.source ?? .none,
+            slice: components.slice ?? .default,
+            width: components.width ?? CSSRect(all: .number(1)),
+            outset: components.outset ?? CSSRect(all: .number(0)),
+            repeat: components.repeat ?? .default
+        ))
     }
 }
 
