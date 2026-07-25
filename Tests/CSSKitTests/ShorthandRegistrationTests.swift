@@ -54,4 +54,24 @@ struct ShorthandRegistrationTests {
         #expect(widths.start == .length(.px(1)))
         #expect(widths.end == .thick)
     }
+
+    @Test("padding uses the longhand length-percentage grammar")
+    func paddingGrammar() throws {
+        let declarations = try CSSParser(
+            "padding: 1px 2%; padding: auto"
+        ).declarations
+
+        guard case let .padding(value) = declarations[0].value else {
+            Issue.record("Expected typed padding")
+            return
+        }
+        #expect(value.top == .dimension(.px(1)))
+        #expect(value.right == .percentage(CSSPercentage(0.02)))
+        #expect(value.bottom == value.top)
+        #expect(value.left == value.right)
+        guard case .unparsed = declarations[1].value else {
+            Issue.record("padding: auto must not enter the typed padding grammar")
+            return
+        }
+    }
 }

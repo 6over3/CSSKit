@@ -73,26 +73,26 @@ public struct CSSMarginInline: Equatable, Sendable, Hashable {
 /// A value for the `padding` shorthand property.
 /// https://drafts.csswg.org/css-box-4/#propdef-padding
 public struct CSSPadding: Equatable, Sendable, Hashable {
-    public var top: CSSLengthPercentageOrAuto
-    public var right: CSSLengthPercentageOrAuto
-    public var bottom: CSSLengthPercentageOrAuto
-    public var left: CSSLengthPercentageOrAuto
+    public var top: CSSLengthPercentage
+    public var right: CSSLengthPercentage
+    public var bottom: CSSLengthPercentage
+    public var left: CSSLengthPercentage
 
-    public init(top: CSSLengthPercentageOrAuto, right: CSSLengthPercentageOrAuto, bottom: CSSLengthPercentageOrAuto, left: CSSLengthPercentageOrAuto) {
+    public init(top: CSSLengthPercentage, right: CSSLengthPercentage, bottom: CSSLengthPercentage, left: CSSLengthPercentage) {
         self.top = top
         self.right = right
         self.bottom = bottom
         self.left = left
     }
 
-    public init(all: CSSLengthPercentageOrAuto) {
+    public init(all: CSSLengthPercentage) {
         top = all
         right = all
         bottom = all
         left = all
     }
 
-    public init(vertical: CSSLengthPercentageOrAuto, horizontal: CSSLengthPercentageOrAuto) {
+    public init(vertical: CSSLengthPercentage, horizontal: CSSLengthPercentage) {
         top = vertical
         right = horizontal
         bottom = vertical
@@ -103,15 +103,15 @@ public struct CSSPadding: Equatable, Sendable, Hashable {
 /// A value for the `padding-block` shorthand property.
 /// https://drafts.csswg.org/css-logical/#propdef-padding-block
 public struct CSSPaddingBlock: Equatable, Sendable, Hashable {
-    public var start: CSSLengthPercentageOrAuto
-    public var end: CSSLengthPercentageOrAuto
+    public var start: CSSLengthPercentage
+    public var end: CSSLengthPercentage
 
-    public init(start: CSSLengthPercentageOrAuto, end: CSSLengthPercentageOrAuto) {
+    public init(start: CSSLengthPercentage, end: CSSLengthPercentage) {
         self.start = start
         self.end = end
     }
 
-    public init(_ both: CSSLengthPercentageOrAuto) {
+    public init(_ both: CSSLengthPercentage) {
         start = both
         end = both
     }
@@ -120,15 +120,15 @@ public struct CSSPaddingBlock: Equatable, Sendable, Hashable {
 /// A value for the `padding-inline` shorthand property.
 /// https://drafts.csswg.org/css-logical/#propdef-padding-inline
 public struct CSSPaddingInline: Equatable, Sendable, Hashable {
-    public var start: CSSLengthPercentageOrAuto
-    public var end: CSSLengthPercentageOrAuto
+    public var start: CSSLengthPercentage
+    public var end: CSSLengthPercentage
 
-    public init(start: CSSLengthPercentageOrAuto, end: CSSLengthPercentageOrAuto) {
+    public init(start: CSSLengthPercentage, end: CSSLengthPercentage) {
         self.start = start
         self.end = end
     }
 
-    public init(_ both: CSSLengthPercentageOrAuto) {
+    public init(_ both: CSSLengthPercentage) {
         start = both
         end = both
     }
@@ -354,19 +354,25 @@ extension CSSMarginInline {
 
 extension CSSPadding {
     static func parse(_ input: Parser) -> Result<CSSPadding, BasicParseError> {
-        parseRect(input).map { CSSPadding(top: $0.top, right: $0.right, bottom: $0.bottom, left: $0.left) }
+        parseLengthPercentageRect(input).map {
+            CSSPadding(top: $0.top, right: $0.right, bottom: $0.bottom, left: $0.left)
+        }
     }
 }
 
 extension CSSPaddingBlock {
     static func parse(_ input: Parser) -> Result<CSSPaddingBlock, BasicParseError> {
-        parseSize(input).map { CSSPaddingBlock(start: $0.0, end: $0.1) }
+        parseLengthPercentageSize(input).map {
+            CSSPaddingBlock(start: $0.0, end: $0.1)
+        }
     }
 }
 
 extension CSSPaddingInline {
     static func parse(_ input: Parser) -> Result<CSSPaddingInline, BasicParseError> {
-        parseSize(input).map { CSSPaddingInline(start: $0.0, end: $0.1) }
+        parseLengthPercentageSize(input).map {
+            CSSPaddingInline(start: $0.0, end: $0.1)
+        }
     }
 }
 
@@ -455,6 +461,53 @@ private func parseSize(_ input: Parser) -> Result<(CSSLengthPercentageOrAuto, CS
         return .success((first, second))
     }
 
+    return .success((first, first))
+}
+
+private func parseLengthPercentageRect(
+    _ input: Parser
+) -> Result<CSSRect<CSSLengthPercentage>, BasicParseError> {
+    guard case let .success(first) = CSSLengthPercentage.parse(input) else {
+        return .failure(input.newBasicError(.endOfInput))
+    }
+    guard case let .success(second) = input.tryParse({
+        CSSLengthPercentage.parse($0)
+    }) else {
+        return .success(CSSRect(all: first))
+    }
+    guard case let .success(third) = input.tryParse({
+        CSSLengthPercentage.parse($0)
+    }) else {
+        return .success(CSSRect(vertical: first, horizontal: second))
+    }
+    if case let .success(fourth) = input.tryParse({
+        CSSLengthPercentage.parse($0)
+    }) {
+        return .success(CSSRect(
+            top: first,
+            right: second,
+            bottom: third,
+            left: fourth
+        ))
+    }
+    return .success(CSSRect(
+        top: first,
+        horizontal: second,
+        bottom: third
+    ))
+}
+
+private func parseLengthPercentageSize(
+    _ input: Parser
+) -> Result<(CSSLengthPercentage, CSSLengthPercentage), BasicParseError> {
+    guard case let .success(first) = CSSLengthPercentage.parse(input) else {
+        return .failure(input.newBasicError(.endOfInput))
+    }
+    if case let .success(second) = input.tryParse({
+        CSSLengthPercentage.parse($0)
+    }) {
+        return .success((first, second))
+    }
     return .success((first, first))
 }
 
