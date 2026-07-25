@@ -531,4 +531,21 @@ struct TypedParsingTests {
         #expect(output.contains("@media"))
         #expect(output.contains("min-width"))
     }
+
+    @Test("Root supports leaf conditions serialize without trapping")
+    func rootSupportsLeavesSerialize() {
+        let declarations = CSSParser(
+            "@supports (display: grid) { div { display: grid; } }"
+        ).stylesheet.string()
+        let selector = CSSParser(
+            "@supports selector(:has(*)) { div { display: block; } }"
+        ).stylesheet.string()
+        let unknown = SupportsCondition.unknown("font-tech(color-COLRv1)")
+        var writer = StringCSSWriter()
+        unknown.serialize(dest: &writer)
+
+        #expect(declarations.contains("@supports (display: grid)"))
+        #expect(selector.contains("@supports selector(:has(*))"))
+        #expect(writer.result == "font-tech(color-COLRv1)")
+    }
 }

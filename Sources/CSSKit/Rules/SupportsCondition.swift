@@ -287,7 +287,6 @@ extension SupportsCondition: CSSSerializable {
                         dest.write(": ")
                         dest.write(value)
                         dest.write(")")
-                        stack.removeLast() // Remove the trailing ")" we added
                     }
 
                 case let .selector(sel):
@@ -299,14 +298,11 @@ extension SupportsCondition: CSSSerializable {
                         dest.write("selector(")
                         dest.write(sel)
                         dest.write(")")
-                        stack.removeLast()
                     }
 
                 case let .unknown(raw):
                     if needsParens {
                         dest.write("(")
-                    } else {
-                        stack.removeLast()
                     }
                     dest.write(raw)
                 }
