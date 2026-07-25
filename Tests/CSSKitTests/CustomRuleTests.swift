@@ -195,6 +195,6 @@ struct CSSAtRuleParsingTests {
         let output = stylesheet.string()
         #expect(output.contains("@tailwind base;"))
         #expect(output.contains("body {"))
-        #expect(output.contains("margin: 0;"))
+        #expect(output.contains("margin: 0px;"))
     }
 }

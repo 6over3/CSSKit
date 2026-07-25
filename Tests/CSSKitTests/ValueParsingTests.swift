@@ -110,6 +110,17 @@ struct ValueParsingTests {
             #expect(length.unit == .px)
         }
 
+        @Test("Parse unitless zero as a length")
+        func unitlessZero() throws {
+            let parser = Parser(css: "0")
+            let result = CSSLength.parse(parser)
+            guard case let .success(length) = result else {
+                Issue.record("Failed to parse unitless zero length")
+                return
+            }
+            #expect(length == .zero)
+        }
+
         @Test("CSSLength serialization roundtrip")
         func serializationRoundtrip() throws {
             let length = CSSLength(10.5, .px)
@@ -577,6 +588,17 @@ struct ValueParsingTests {
                 return
             }
             #expect(pct.value == 0.5)
+        }
+
+        @Test("Parse unitless zero as a length-percentage")
+        func parseUnitlessZero() throws {
+            let parser = Parser(css: "0")
+            let result = CSSLengthPercentage.parse(parser)
+            guard case let .success(.dimension(length)) = result else {
+                Issue.record("Failed to parse unitless zero length-percentage")
+                return
+            }
+            #expect(length == .zero)
         }
     }
 

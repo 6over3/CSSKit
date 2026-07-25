@@ -227,7 +227,7 @@ public struct CSSLength: Sendable, Hashable {
 extension CSSLength {
     /// Parses a `<length>` value.
     static func parse(_ input: Parser) -> Result<CSSLength, BasicParseError> {
-        parseInternal(input, allowUnitlessZero: false)
+        parseInternal(input, allowUnitlessZero: true)
     }
 
     /// Parses a `<length>` value, allowing unitless zero.

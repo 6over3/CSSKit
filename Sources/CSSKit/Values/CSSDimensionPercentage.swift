@@ -61,7 +61,7 @@ public typealias CSSTimePercentage = CSSDimensionPercentage<CSSTime>
 extension CSSDimensionPercentage where D == CSSLength {
     /// Parses a `<length-percentage>` value.
     static func parse(_ input: Parser) -> Result<CSSLengthPercentage, BasicParseError> {
-        parseInternal(input, allowUnitlessZero: false)
+        parseInternal(input, allowUnitlessZero: true)
     }
 
     /// Parses a `<length-percentage>` value, allowing unitless zero.
