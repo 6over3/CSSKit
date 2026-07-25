@@ -660,21 +660,31 @@ extension StylesheetBuilder {
         location: SourceLocation
     ) -> Rule<P.AtRule> {
         let (declarations, _) = parseBlockContents(input)
-        var syntaxStr = "*"
-        var inherits = false
+        var syntaxStr: String?
+        var inherits: Bool?
         var initialStr: String?
+        var descriptorsAreValid = true
 
         for decl in declarations {
             switch decl.name.lowercased() {
             case "syntax":
-                let s = decl.rawValue
-                if (s.hasPrefix("\"") && s.hasSuffix("\"")) || (s.hasPrefix("'") && s.hasSuffix("'")) {
-                    syntaxStr = String(s.dropFirst().dropLast())
+                let parser = Parser(css: decl.rawValue)
+                if case let .success(value) = CSSString.parse(parser),
+                   parser.isExhausted
+                {
+                    syntaxStr = value.value
                 } else {
-                    syntaxStr = s
+                    descriptorsAreValid = false
                 }
             case "inherits":
-                inherits = decl.rawValue.lowercased() == "true"
+                switch decl.rawValue.lowercased() {
+                case "true":
+                    inherits = true
+                case "false":
+                    inherits = false
+                default:
+                    descriptorsAreValid = false
+                }
             case "initial-value":
                 initialStr = decl.rawValue
             default:
@@ -682,18 +692,41 @@ extension StylesheetBuilder {
             }
         }
 
-        let syntax = (try? CSSSyntaxString.parse(string: syntaxStr).get()) ?? .universal
+        let nameParser = Parser(css: prelude)
+        let nameIsValid: Bool
+        if case let .success(name) = CSSDashedIdent.parse(nameParser) {
+            nameIsValid = name.value.count > 2 && nameParser.isExhausted
+        } else {
+            nameIsValid = false
+        }
+
+        let parsedSyntax = syntaxStr.flatMap {
+            try? CSSSyntaxString.parse(string: $0).get()
+        }
+        let syntax = parsedSyntax ?? .universal
 
         var initialValue: CSSParsedComponent?
         if let str = initialStr {
-            initialValue = try? syntax.parseValue(Parser(css: str)).get()
+            initialValue = try? syntax.parseValue(str).get()
         }
+        let needsInitialValue = syntax != .universal
+        let initialValueIsValid = !needsInitialValue || (
+            initialValue != nil
+                && initialValue?.isComputationallyIndependent == true
+        )
+        let isValid = descriptorsAreValid
+            && nameIsValid
+            && syntaxStr != nil
+            && parsedSyntax != nil
+            && inherits != nil
+            && initialValueIsValid
 
         return .property(PropertyRule(
             name: prelude,
             syntax: syntax,
-            inherits: inherits,
+            inherits: inherits ?? false,
             initialValue: initialValue,
+            isValid: isValid,
             location: location
         ))
     }

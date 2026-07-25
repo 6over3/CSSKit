@@ -18,6 +18,12 @@ public struct PropertyRule: Equatable, Sendable, Hashable {
     /// The initial value for the custom property
     public let initialValue: CSSParsedComponent?
 
+    /// Whether the rule has all required descriptors and valid descriptor values.
+    ///
+    /// Invalid rules remain in the parsed stylesheet so tooling can inspect
+    /// their source location, but consumers must not register them.
+    public let isValid: Bool
+
     /// The location of the rule in the source file.
     public let location: SourceLocation
 
@@ -27,12 +33,14 @@ public struct PropertyRule: Equatable, Sendable, Hashable {
         syntax: CSSSyntaxString,
         inherits: Bool,
         initialValue: CSSParsedComponent?,
+        isValid: Bool = true,
         location: SourceLocation = .init()
     ) {
         self.name = name
         self.syntax = syntax
         self.inherits = inherits
         self.initialValue = initialValue
+        self.isValid = isValid
         self.location = location
     }
 }

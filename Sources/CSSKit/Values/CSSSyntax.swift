@@ -201,6 +201,16 @@ extension CSSSyntaxString {
         return .success(.components(components))
     }
 
+    /// Parses an entire CSS value according to this syntax grammar.
+    ///
+    /// The parse fails when any non-whitespace tokens remain after the value.
+    public func parseValue(_ css: String) -> Result<CSSParsedComponent, BasicParseError> {
+        let input = Parser(css: css)
+        return parseValue(input).flatMap { value in
+            input.expectExhausted().map { value }
+        }
+    }
+
     /// Parses a value according to this syntax grammar.
     func parseValue(_ input: Parser) -> Result<CSSParsedComponent, BasicParseError> {
         switch self {
@@ -571,6 +581,82 @@ extension CSSParsedComponent: CSSSerializable {
             }
         case let .tokenList(tokens):
             dest.write(tokens)
+        }
+    }
+}
+
+extension CSSParsedComponent {
+    var isComputationallyIndependent: Bool {
+        switch self {
+        case let .length(length):
+            return length.unit.isAbsolute || length.unit.isViewportRelative
+        case let .lengthPercentage(value):
+            return value.isComputationallyIndependent
+        case .color(.currentColor):
+            return false
+        case let .repeated(values, _):
+            return values.allSatisfy(\.isComputationallyIndependent)
+        case .number, .percentage, .string, .color, .image, .url, .integer,
+             .angle, .time, .resolution, .transformFunction, .transformList,
+             .customIdent, .literal, .tokenList:
+            return true
+        }
+    }
+}
+
+private extension CSSLengthPercentage {
+    var isComputationallyIndependent: Bool {
+        switch self {
+        case let .dimension(length):
+            return length.unit.isAbsolute || length.unit.isViewportRelative
+        case .percentage:
+            return true
+        case let .calc(calculation):
+            return calculation.isComputationallyIndependent
+        }
+    }
+}
+
+private extension CSSCalc where V == CSSLengthPercentage {
+    var isComputationallyIndependent: Bool {
+        switch self {
+        case let .value(value):
+            return value.isComputationallyIndependent
+        case .number:
+            return true
+        case let .sum(lhs, rhs):
+            return lhs.isComputationallyIndependent
+                && rhs.isComputationallyIndependent
+        case let .product(value, _):
+            return value.isComputationallyIndependent
+        case let .function(function):
+            return function.isComputationallyIndependent
+        }
+    }
+}
+
+private extension CSSMathFunction where V == CSSLengthPercentage {
+    var isComputationallyIndependent: Bool {
+        switch self {
+        case let .calc(value), let .abs(value), let .sign(value),
+             let .sin(value), let .cos(value), let .tan(value),
+             let .asin(value), let .acos(value), let .atan(value),
+             let .sqrt(value), let .exp(value):
+            return value.isComputationallyIndependent
+        case let .min(values), let .max(values), let .hypot(values):
+            return values.allSatisfy(\.isComputationallyIndependent)
+        case let .clamp(a, b, c):
+            return a.isComputationallyIndependent
+                && b.isComputationallyIndependent
+                && c.isComputationallyIndependent
+        case let .round(_, value, step), let .mod(value, step),
+             let .rem(value, step), let .atan2(value, step),
+             let .pow(value, step):
+            return value.isComputationallyIndependent
+                && step.isComputationallyIndependent
+        case let .log(value, base):
+            return value.isComputationallyIndependent
+                && (base?.isComputationallyIndependent ?? true)
         }
     }
 }

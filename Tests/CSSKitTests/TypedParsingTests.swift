@@ -103,6 +103,51 @@ struct TypedParsingTests {
         }
     }
 
+    @Test("@property validates required descriptors and initial value")
+    func propertyValidity() {
+        let css = """
+        @property --valid {
+          syntax: "<length>";
+          inherits: false;
+          initial-value: 8px;
+        }
+        @property --missing-inherits {
+          syntax: "<length>";
+          initial-value: 8px;
+        }
+        @property --dependent {
+          syntax: "<length>";
+          inherits: false;
+          initial-value: 1rem;
+        }
+        @property --trailing {
+          syntax: "<length>";
+          inherits: false;
+          initial-value: 8px junk;
+        }
+        @property not-custom {
+          syntax: "*";
+          inherits: true;
+        }
+        """
+        let properties: [PropertyRule] = CSSParser(css).stylesheet.rules.compactMap { rule in
+            guard case let .property(property) = rule else {
+                return nil
+            }
+            return property
+        }
+
+        #expect(properties.map(\.isValid) == [true, false, false, false, false])
+    }
+
+    @Test("registered syntax parses a complete public string value")
+    func propertySyntaxParsesCompleteStringValue() throws {
+        let syntax = try CSSSyntaxString.parse(string: "<length>").get()
+
+        #expect(try syntax.parseValue("12px").get() == .length(.px(12)))
+        #expect(syntax.parseValue("12px junk").isFailure)
+    }
+
     // MARK: - @scope Rule
 
     @Test("@scope parses scopeStart as SelectorList")
