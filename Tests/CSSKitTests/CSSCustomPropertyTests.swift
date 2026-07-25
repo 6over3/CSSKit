@@ -188,6 +188,13 @@ struct CSSCustomPropertyTests {
             )
         }
 
+        @Test("Reject parse-error tokens in a public token stream")
+        func rejectParseErrorTokensInPublicTokenStream() {
+            #expect(CSSTokenList.parse(css: "url(a b)").isFailure)
+            #expect(CSSTokenList.parse(css: "value)").isFailure)
+            #expect(CSSTokenList.parse(css: "func('unterminated)").isFailure)
+        }
+
         @Test("Empty token list")
         func emptyList() throws {
             let list = CSSTokenList.empty
