@@ -20,7 +20,7 @@ import CSSKitMacros
 
     _ = ("color", Color.self, CSSPropertyFlags.inherits)
     _ = ("background-color", Color.self)
-    _ = ("border-color", Color.self)
+    _ = ("border-color", CSSBorderColor.self, CSSPropertyFlags.shorthand)
     _ = ("border-top-color", Color.self)
     _ = ("border-right-color", Color.self)
     _ = ("border-bottom-color", Color.self)
@@ -29,6 +29,8 @@ import CSSKitMacros
     _ = ("border-block-end-color", Color.self)
     _ = ("border-inline-start-color", Color.self)
     _ = ("border-inline-end-color", Color.self)
+    _ = ("border-block-color", CSSBorderBlockColor.self, CSSPropertyFlags.shorthand)
+    _ = ("border-inline-color", CSSBorderInlineColor.self, CSSPropertyFlags.shorthand)
     _ = ("outline-color", Color.self)
     _ = ("text-decoration-color", Color.self)
     _ = ("text-emphasis-color", Color.self)
@@ -166,6 +168,8 @@ import CSSKitMacros
     _ = ("border-block-end-style", CSSLineStyle.self)
     _ = ("border-inline-start-style", CSSLineStyle.self)
     _ = ("border-inline-end-style", CSSLineStyle.self)
+    _ = ("border-block-style", CSSBorderBlockStyle.self, CSSPropertyFlags.shorthand)
+    _ = ("border-inline-style", CSSBorderInlineStyle.self, CSSPropertyFlags.shorthand)
 
     // MARK: - Border Width
 
@@ -178,6 +182,8 @@ import CSSKitMacros
     _ = ("border-block-end-width", CSSBorderSideWidth.self)
     _ = ("border-inline-start-width", CSSBorderSideWidth.self)
     _ = ("border-inline-end-width", CSSBorderSideWidth.self)
+    _ = ("border-block-width", CSSBorderBlockWidth.self, CSSPropertyFlags.shorthand)
+    _ = ("border-inline-width", CSSBorderInlineWidth.self, CSSPropertyFlags.shorthand)
 
     // MARK: - Border Shorthand
 
