@@ -461,10 +461,20 @@ extension CSSGenericFontFamily {
 extension CSSFamilyName {
     static func parse(_ input: Parser) -> Result<CSSFamilyName, BasicParseError> {
         // Try quoted string first
-        if case let .success(token) = input.tryParse({ $0.next() }) {
-            if case let .quotedString(s) = token {
-                return .success(CSSFamilyName(s.value))
+        if case let .success(name) = input.tryParse({ parser
+            -> Result<CSSFamilyName, BasicParseError> in
+            switch parser.next() {
+            case let .success(.quotedString(string)):
+                .success(CSSFamilyName(string.value))
+            case let .success(token):
+                .failure(
+                    parser.newBasicError(.unexpectedToken(token))
+                )
+            case let .failure(error):
+                .failure(error)
             }
+        }) {
+            return .success(name)
         }
 
         // Parse as sequence of idents

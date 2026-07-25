@@ -74,4 +74,110 @@ struct ShorthandRegistrationTests {
             return
         }
     }
+
+    @Test("layered background longhands preserve every layer")
+    func backgroundLonghandLists() throws {
+        let declarations = try CSSParser(
+            """
+            background-image: linear-gradient(red, blue), url(hero.png);
+            background-position: left top, center;
+            background-size: cover, 40px auto;
+            background-repeat: no-repeat, repeat-x;
+            background-attachment: fixed, scroll;
+            background-clip: text, padding-box;
+            background-origin: border-box, content-box;
+            """
+        ).declarations
+
+        guard case let .backgroundImage(images) = declarations[0].value,
+              case let .backgroundPosition(positions) = declarations[1].value,
+              case let .backgroundSize(sizes) = declarations[2].value,
+              case let .backgroundRepeat(repeats) = declarations[3].value,
+              case let .backgroundAttachment(attachments) = declarations[4].value,
+              case let .backgroundClip(clips) = declarations[5].value,
+              case let .backgroundOrigin(origins) = declarations[6].value
+        else {
+            Issue.record(
+                "Expected typed layered background longhands: \(String(reflecting: declarations.map(\.value)))"
+            )
+            return
+        }
+
+        #expect(images.values.count == 2)
+        #expect(positions.values.count == 2)
+        #expect(sizes.values.count == 2)
+        #expect(repeats.values == [.init(x: .noRepeat, y: .noRepeat), .repeatX])
+        #expect(attachments.values == [.fixed, .scroll])
+        #expect(clips.values == [.text, .paddingBox])
+        #expect(origins.values == [.borderBox, .contentBox])
+    }
+
+    @Test("font fallback families remain a typed ordered list")
+    func fontFamilyList() throws {
+        let declaration = try CSSParser(
+            #"font-family: "Source Serif 4", Georgia, serif"#
+        ).declarations.first
+
+        guard case let .fontFamily(families) = declaration?.value else {
+            Issue.record(
+                "Expected a typed font-family list: \(String(reflecting: declaration?.value))"
+            )
+            return
+        }
+
+        #expect(families.values.count == 3)
+        #expect(families.values.last == .generic(.serif))
+    }
+
+    @Test("transition and animation longhands preserve comma lists")
+    func motionLonghandLists() throws {
+        let declarations = try CSSParser(
+            """
+            transition-duration: 120ms, 0.4s;
+            transition-timing-function: ease-out, linear;
+            animation-name: reveal, settle;
+            animation-iteration-count: 1, infinite;
+            """
+        ).declarations
+
+        guard case let .transitionDuration(durations, _) = declarations[0].value,
+              case let .transitionTimingFunction(easings, _) = declarations[1].value,
+              case let .animationName(names, _) = declarations[2].value,
+              case let .animationIterationCount(counts, _) = declarations[3].value
+        else {
+            Issue.record("Expected typed motion longhand lists")
+            return
+        }
+
+        #expect(durations.values.map(\.inMilliseconds) == [120, 400])
+        #expect(easings.values == [.easeOut, .linear])
+        #expect(names.values.count == 2)
+        #expect(counts.values == [.number(1), .infinite])
+    }
+
+    @Test("mask shorthand and longhands preserve layer lists")
+    func maskLists() throws {
+        let declarations = try CSSParser(
+            """
+            mask: url(alpha.svg) center / cover no-repeat,
+                  linear-gradient(black, transparent);
+            mask-image: url(alpha.svg), url(beta.svg);
+            mask-mode: alpha, luminance;
+            """
+        ).declarations
+
+        guard case let .mask(masks, _) = declarations[0].value,
+              case let .maskImage(images, _) = declarations[1].value,
+              case let .maskMode(modes, _) = declarations[2].value
+        else {
+            Issue.record(
+                "Expected typed mask lists: \(String(reflecting: declarations.map(\.value)))"
+            )
+            return
+        }
+
+        #expect(masks.values.count == 2)
+        #expect(images.values.count == 2)
+        #expect(modes.values == [.alpha, .luminance])
+    }
 }

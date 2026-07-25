@@ -1102,7 +1102,8 @@ struct ValueParsingTests {
                 Issue.record("Expected transitionDuration property, got \(prop)")
                 return
             }
-            #expect(time.inMilliseconds == 500)
+            #expect(time.values.count == 1)
+            #expect(time.values.first?.inMilliseconds == 500)
             #expect(prefix == .none)
         }
 
@@ -1118,7 +1119,7 @@ struct ValueParsingTests {
                 Issue.record("Expected transitionTimingFunction property, got \(prop)")
                 return
             }
-            #expect(easing == .easeInOut)
+            #expect(easing.values == [.easeInOut])
             #expect(prefix == .none)
         }
 

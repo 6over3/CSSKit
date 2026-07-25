@@ -234,15 +234,15 @@ import CSSKitMacros
     // MARK: - Background
 
     _ = ("background", CSSBackgroundList.self, CSSPropertyFlags.shorthand)
-    _ = ("background-image", CSSImage.self)
-    _ = ("background-position", CSSBackgroundPosition.self)
-    _ = ("background-position-x", CSSLengthPercentage.self)
-    _ = ("background-position-y", CSSLengthPercentage.self)
-    _ = ("background-size", CSSBackgroundSize.self)
-    _ = ("background-repeat", CSSBackgroundRepeat.self)
-    _ = ("background-attachment", CSSBackgroundAttachment.self)
-    _ = ("background-clip", CSSBackgroundClip.self)
-    _ = ("background-origin", CSSBackgroundOrigin.self)
+    _ = ("background-image", CSSImageList.self)
+    _ = ("background-position", CSSBackgroundPositionList.self)
+    _ = ("background-position-x", CSSCommaSeparatedList<CSSLengthPercentage>.self)
+    _ = ("background-position-y", CSSCommaSeparatedList<CSSLengthPercentage>.self)
+    _ = ("background-size", CSSBackgroundSizeList.self)
+    _ = ("background-repeat", CSSBackgroundRepeatList.self)
+    _ = ("background-attachment", CSSBackgroundAttachmentList.self)
+    _ = ("background-clip", CSSBackgroundClipList.self)
+    _ = ("background-origin", CSSBackgroundOriginList.self)
 
     // MARK: - Opacity & Effects
 
@@ -254,7 +254,7 @@ import CSSKitMacros
     // MARK: - Font Properties
 
     _ = ("font", CSSFont.self, [CSSPropertyFlags.shorthand, .inherits])
-    _ = ("font-family", CSSFontFamily.self, CSSPropertyFlags.inherits)
+    _ = ("font-family", CSSFontFamilyList.self, CSSPropertyFlags.inherits)
     _ = ("font-size", CSSFontSize.self, CSSPropertyFlags.inherits)
     _ = ("font-weight", CSSFontWeight.self, CSSPropertyFlags.inherits)
     _ = ("font-style", CSSFontStyle.self, CSSPropertyFlags.inherits)
@@ -306,23 +306,23 @@ import CSSKitMacros
     // MARK: - Transition Properties
 
     _ = ("transition", CSSTransitionList.self, [CSSPropertyFlags.shorthand, .webkit, .moz, .o])
-    _ = ("transition-property", CSSTransitionPropertyId.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("transition-duration", CSSTime.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("transition-delay", CSSTime.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("transition-timing-function", CSSEasingFunction.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("transition-property", CSSTransitionPropertyList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("transition-duration", CSSTimeList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("transition-delay", CSSTimeList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("transition-timing-function", CSSEasingFunctionList.self, [CSSPropertyFlags.webkit, .moz, .o])
 
     // MARK: - Animation Properties
 
     _ = ("animation", CSSAnimationList.self, [CSSPropertyFlags.shorthand, .webkit, .moz, .o])
-    _ = ("animation-name", CSSAnimationName.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("animation-duration", CSSTime.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("animation-delay", CSSTime.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("animation-timing-function", CSSEasingFunction.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("animation-iteration-count", CSSAnimationIterationCount.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("animation-direction", CSSAnimationDirection.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("animation-fill-mode", CSSAnimationFillMode.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("animation-play-state", CSSAnimationPlayState.self, [CSSPropertyFlags.webkit, .moz, .o])
-    _ = ("animation-composition", CSSAnimationComposition.self)
+    _ = ("animation-name", CSSAnimationNameList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("animation-duration", CSSTimeList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("animation-delay", CSSTimeList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("animation-timing-function", CSSEasingFunctionList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("animation-iteration-count", CSSAnimationIterationCountList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("animation-direction", CSSAnimationDirectionList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("animation-fill-mode", CSSAnimationFillModeList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("animation-play-state", CSSAnimationPlayStateList.self, [CSSPropertyFlags.webkit, .moz, .o])
+    _ = ("animation-composition", CSSAnimationCompositionList.self)
 
     // MARK: - List Properties
 
@@ -333,15 +333,15 @@ import CSSKitMacros
 
     // MARK: - Masking Properties
 
-    _ = ("mask", CSSMask.self, [CSSPropertyFlags.shorthand, .webkit])
-    _ = ("mask-image", CSSImage.self, CSSPropertyFlags.webkit)
-    _ = ("mask-mode", CSSMaskMode.self, CSSPropertyFlags.webkit)
-    _ = ("mask-repeat", CSSBackgroundRepeat.self, CSSPropertyFlags.webkit)
-    _ = ("mask-position", CSSPosition.self, CSSPropertyFlags.webkit)
-    _ = ("mask-clip", CSSMaskClip.self, CSSPropertyFlags.webkit)
-    _ = ("mask-origin", CSSGeometryBox.self, CSSPropertyFlags.webkit)
-    _ = ("mask-size", CSSBackgroundSize.self, CSSPropertyFlags.webkit)
-    _ = ("mask-composite", CSSMaskComposite.self, CSSPropertyFlags.webkit)
+    _ = ("mask", CSSMaskList.self, [CSSPropertyFlags.shorthand, .webkit])
+    _ = ("mask-image", CSSImageList.self, CSSPropertyFlags.webkit)
+    _ = ("mask-mode", CSSMaskModeList.self, CSSPropertyFlags.webkit)
+    _ = ("mask-repeat", CSSBackgroundRepeatList.self, CSSPropertyFlags.webkit)
+    _ = ("mask-position", CSSPositionList.self, CSSPropertyFlags.webkit)
+    _ = ("mask-clip", CSSMaskClipList.self, CSSPropertyFlags.webkit)
+    _ = ("mask-origin", CSSGeometryBoxList.self, CSSPropertyFlags.webkit)
+    _ = ("mask-size", CSSBackgroundSizeList.self, CSSPropertyFlags.webkit)
+    _ = ("mask-composite", CSSMaskCompositeList.self, CSSPropertyFlags.webkit)
     _ = ("mask-type", CSSMaskType.self)
     _ = ("clip-path", CSSClipPath.self, CSSPropertyFlags.webkit)
 

@@ -242,20 +242,27 @@ extension CSSBackgroundRepeatKeyword {
 
 extension CSSBackgroundRepeat {
     static func parse(_ input: Parser) -> Result<CSSBackgroundRepeat, BasicParseError> {
-        // Try repeat-x / repeat-y first
-        if case let .success(ident) = input.tryParse({ $0.expectIdent() }) {
-            switch ident.value.lowercased() {
-            case "repeat-x":
-                return .success(.repeatX)
-            case "repeat-y":
-                return .success(.repeatY)
-            default:
-                break
-            }
+        let location = input.currentSourceLocation()
+        guard case let .success(ident) = input.expectIdent() else {
+            return .failure(input.newBasicError(.endOfInput))
         }
 
-        guard case let .success(x) = CSSBackgroundRepeatKeyword.parse(input) else {
-            return .failure(input.newBasicError(.endOfInput))
+        let first = ident.value.lowercased()
+        switch first {
+        case "repeat-x":
+            return .success(.repeatX)
+        case "repeat-y":
+            return .success(.repeatY)
+        default:
+            break
+        }
+
+        guard let x = CSSBackgroundRepeatKeyword.allCases.first(
+            where: { $0.rawValue == first }
+        ) else {
+            return .failure(
+                location.newBasicUnexpectedTokenError(.ident(ident))
+            )
         }
 
         let y: CSSBackgroundRepeatKeyword = if case let .success(yVal) = input.tryParse({ CSSBackgroundRepeatKeyword.parse($0) }) {

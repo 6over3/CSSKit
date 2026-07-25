@@ -200,6 +200,9 @@ public struct CSSMask: Equatable, Sendable, Hashable {
     public static let `default` = Self()
 }
 
+/// A list of mask layers.
+public typealias CSSMaskList = CSSCommaSeparatedList<CSSMask>
+
 // MARK: - Clip Path
 
 /// A value for the `clip-path` property.
@@ -439,6 +442,14 @@ extension CSSMask {
             mode: mode ?? .matchSource,
             vendorPrefix: vendorPrefix
         ))
+    }
+}
+
+extension CSSMask: CSSParseable {
+    static func parse(
+        _ input: Parser
+    ) -> Result<CSSMask, BasicParseError> {
+        parse(input, vendorPrefix: .none)
     }
 }
 
