@@ -56,6 +56,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     case overflow
     case overflowX
     case overflowY
+    case overflowBlock
+    case overflowInline
     case textOverflow
 
     // MARK: - Position Properties
@@ -484,6 +486,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case .overflow: "overflow"
         case .overflowX: "overflow-x"
         case .overflowY: "overflow-y"
+        case .overflowBlock: "overflow-block"
+        case .overflowInline: "overflow-inline"
         case .textOverflow: "text-overflow"
         case .position: "position"
         case .top: "top"
@@ -816,6 +820,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case "overflow": self = .overflow
         case "overflow-x": self = .overflowX
         case "overflow-y": self = .overflowY
+        case "overflow-block": self = .overflowBlock
+        case "overflow-inline": self = .overflowInline
         case "text-overflow": self = .textOverflow
         case "position": self = .position
         case "top": self = .top

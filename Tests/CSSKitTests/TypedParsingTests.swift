@@ -567,4 +567,22 @@ struct TypedParsingTests {
         #expect(CSSPropertyId.writingMode.inherits)
         #expect(CSSWritingMode.initial == .horizontalTopToBottom)
     }
+
+    @Test("Logical overflow longhands parse as typed properties")
+    func logicalOverflowProperties() throws {
+        let declarations = try CSSParser(
+            "overflow-block: clip; overflow-inline: auto"
+        ).declarations
+
+        guard case .overflowBlock(.clip) = declarations[0].value else {
+            Issue.record("Expected typed overflow-block")
+            return
+        }
+        guard case .overflowInline(.auto) = declarations[1].value else {
+            Issue.record("Expected typed overflow-inline")
+            return
+        }
+        #expect(CSSPropertyId("overflow-block") == .overflowBlock)
+        #expect(CSSPropertyId("overflow-inline") == .overflowInline)
+    }
 }

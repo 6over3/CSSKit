@@ -115,6 +115,8 @@ import CSSKitMacros
     _ = ("overflow", CSSOverflow.self, CSSPropertyFlags.shorthand)
     _ = ("overflow-x", CSSOverflowKeyword.self)
     _ = ("overflow-y", CSSOverflowKeyword.self)
+    _ = ("overflow-block", CSSOverflowKeyword.self)
+    _ = ("overflow-inline", CSSOverflowKeyword.self)
     _ = ("text-overflow", CSSTextOverflow.self)
 
     // MARK: - Flex Properties
