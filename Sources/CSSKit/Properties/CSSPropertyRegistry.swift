@@ -292,6 +292,7 @@ import CSSKitMacros
     _ = ("word-spacing", CSSSpacing.self, CSSPropertyFlags.inherits)
     _ = ("vertical-align", CSSVerticalAlign.self)
     _ = ("direction", CSSDirection.self, CSSPropertyFlags.inherits)
+    _ = ("writing-mode", CSSWritingMode.self, CSSPropertyFlags.inherits)
     _ = ("unicode-bidi", CSSUnicodeBidi.self)
 
     // MARK: - Transform Properties

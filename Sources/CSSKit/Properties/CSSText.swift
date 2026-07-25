@@ -474,6 +474,21 @@ public enum CSSDirection: String, Equatable, Sendable, Hashable {
     case rtl
 }
 
+/// A value for the `writing-mode` property.
+/// https://drafts.csswg.org/css-writing-modes-4/#block-flow
+public enum CSSWritingMode: String, Equatable, Sendable, Hashable {
+    /// Lines flow from top to bottom and inline content flows horizontally.
+    case horizontalTopToBottom = "horizontal-tb"
+    /// Lines flow from right to left and inline content flows vertically.
+    case verticalRightToLeft = "vertical-rl"
+    /// Lines flow from left to right and inline content flows vertically.
+    case verticalLeftToRight = "vertical-lr"
+    /// Lines flow from right to left with sideways glyph orientation.
+    case sidewaysRightToLeft = "sideways-rl"
+    /// Lines flow from left to right with sideways glyph orientation.
+    case sidewaysLeftToRight = "sideways-lr"
+}
+
 /// A value for the `unicode-bidi` property.
 /// https://drafts.csswg.org/css-writing-modes-3/#unicode-bidi
 public enum CSSUnicodeBidi: String, Equatable, Sendable, Hashable {
@@ -1158,6 +1173,24 @@ extension CSSDirection {
     }
 }
 
+extension CSSWritingMode {
+    static func parse(_ input: Parser) -> Result<CSSWritingMode, BasicParseError> {
+        let location = input.currentSourceLocation()
+        guard case let .success(ident) = input.expectIdent() else {
+            return .failure(input.newBasicError(.endOfInput))
+        }
+        switch ident.lowercased() {
+        case "horizontal-tb": return .success(.horizontalTopToBottom)
+        case "vertical-rl": return .success(.verticalRightToLeft)
+        case "vertical-lr": return .success(.verticalLeftToRight)
+        case "sideways-rl": return .success(.sidewaysRightToLeft)
+        case "sideways-lr": return .success(.sidewaysLeftToRight)
+        default:
+            return .failure(location.newBasicUnexpectedTokenError(.ident(ident)))
+        }
+    }
+}
+
 extension CSSUnicodeBidi {
     static func parse(_ input: Parser) -> Result<CSSUnicodeBidi, BasicParseError> {
         let location = input.currentSourceLocation()
@@ -1496,6 +1529,12 @@ extension CSSBoxDecorationBreak: CSSSerializable {
 }
 
 extension CSSDirection: CSSSerializable {
+    public func serialize(dest: inout some CSSWriter) {
+        dest.write(rawValue)
+    }
+}
+
+extension CSSWritingMode: CSSSerializable {
     public func serialize(dest: inout some CSSWriter) {
         dest.write(rawValue)
     }

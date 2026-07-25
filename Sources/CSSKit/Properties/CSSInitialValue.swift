@@ -92,6 +92,10 @@ extension CSSDirection: CSSInitialValue {
     public static var initial: CSSDirection { .ltr }
 }
 
+extension CSSWritingMode: CSSInitialValue {
+    public static var initial: CSSWritingMode { .horizontalTopToBottom }
+}
+
 extension CSSTextOverflow: CSSInitialValue {
     public static var initial: CSSTextOverflow { .clip }
 }

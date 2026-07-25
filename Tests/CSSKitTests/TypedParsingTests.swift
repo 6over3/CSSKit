@@ -548,4 +548,20 @@ struct TypedParsingTests {
         #expect(selector.contains("@supports selector(:has(*))"))
         #expect(writer.result == "font-tech(color-COLRv1)")
     }
+
+    @Test("Writing mode parses as a typed inherited property")
+    func writingModeProperty() throws {
+        let declarations = try CSSParser(
+            "writing-mode: vertical-rl"
+        ).declarations
+        let declaration = try #require(declarations.first)
+
+        guard case let .writingMode(mode) = declaration.value else {
+            Issue.record("Expected typed writing-mode")
+            return
+        }
+        #expect(mode == .verticalRightToLeft)
+        #expect(declaration.value.inherits)
+        #expect(CSSWritingMode.initial == .horizontalTopToBottom)
+    }
 }
