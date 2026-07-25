@@ -1105,7 +1105,7 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     /// Whether this property is a shorthand property.
     public var isShorthand: Bool {
         switch self {
-        case .background, .backgroundPosition, .border, .borderTop, .borderBottom,
+        case .background, .border, .borderTop, .borderBottom,
              .borderLeft, .borderRight, .borderBlock, .borderBlockStart, .borderBlockEnd,
              .borderInline, .borderInlineStart, .borderInlineEnd, .borderColor,
              .borderBlockColor, .borderInlineColor, .borderStyle, .borderBlockStyle,

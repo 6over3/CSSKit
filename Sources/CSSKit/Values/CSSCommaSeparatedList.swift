@@ -100,6 +100,8 @@ public typealias CSSAnimationPlayStateList =
     CSSCommaSeparatedList<CSSAnimationPlayState>
 public typealias CSSAnimationCompositionList =
     CSSCommaSeparatedList<CSSAnimationComposition>
+public typealias CSSAnimationTimelineList =
+    CSSCommaSeparatedList<CSSAnimationTimeline>
 public typealias CSSMaskModeList =
     CSSCommaSeparatedList<CSSMaskMode>
 public typealias CSSPositionList =
@@ -130,6 +132,7 @@ extension CSSAnimationDirection: CSSParseable {}
 extension CSSAnimationFillMode: CSSParseable {}
 extension CSSAnimationPlayState: CSSParseable {}
 extension CSSAnimationComposition: CSSParseable {}
+extension CSSAnimationTimeline: CSSParseable {}
 extension CSSMaskMode: CSSParseable {}
 extension CSSPosition: CSSParseable {}
 extension CSSMaskClip: CSSParseable {}

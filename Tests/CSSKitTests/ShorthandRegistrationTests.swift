@@ -137,13 +137,15 @@ struct ShorthandRegistrationTests {
             transition-timing-function: ease-out, linear;
             animation-name: reveal, settle;
             animation-iteration-count: 1, infinite;
+            animation-timeline: auto, scroll(root block);
             """
         ).declarations
 
         guard case let .transitionDuration(durations, _) = declarations[0].value,
               case let .transitionTimingFunction(easings, _) = declarations[1].value,
               case let .animationName(names, _) = declarations[2].value,
-              case let .animationIterationCount(counts, _) = declarations[3].value
+              case let .animationIterationCount(counts, _) = declarations[3].value,
+              case let .animationTimeline(timelines) = declarations[4].value
         else {
             Issue.record("Expected typed motion longhand lists")
             return
@@ -153,6 +155,12 @@ struct ShorthandRegistrationTests {
         #expect(easings.values == [.easeOut, .linear])
         #expect(names.values.count == 2)
         #expect(counts.values == [.number(1), .infinite])
+        #expect(timelines.values.count == 2)
+    }
+
+    @Test("background-position is a list-valued longhand")
+    func backgroundPositionIsLonghand() {
+        #expect(!CSSPropertyId.backgroundPosition.isShorthand)
     }
 
     @Test("mask shorthand and longhands preserve layer lists")

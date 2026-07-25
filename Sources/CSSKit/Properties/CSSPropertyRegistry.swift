@@ -323,6 +323,7 @@ import CSSKitMacros
     _ = ("animation-fill-mode", CSSAnimationFillModeList.self, [CSSPropertyFlags.webkit, .moz, .o])
     _ = ("animation-play-state", CSSAnimationPlayStateList.self, [CSSPropertyFlags.webkit, .moz, .o])
     _ = ("animation-composition", CSSAnimationCompositionList.self)
+    _ = ("animation-timeline", CSSAnimationTimelineList.self)
 
     // MARK: - List Properties
 
