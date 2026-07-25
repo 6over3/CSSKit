@@ -230,7 +230,11 @@ extension CSSSyntaxString {
 
                 switch component.parseValue(input) {
                 case let .success(value):
-                    return .success(value)
+                    if input.isExhausted {
+                        return .success(value)
+                    }
+                    input.reset(state)
+                    continue
                 case .failure:
                     input.reset(state)
                     continue

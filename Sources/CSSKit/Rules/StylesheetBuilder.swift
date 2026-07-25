@@ -660,10 +660,23 @@ extension StylesheetBuilder {
         location: SourceLocation
     ) -> Rule<P.AtRule> {
         let (declarations, _) = parseBlockContents(input)
+        return .property(makePropertyRule(
+            name: prelude,
+            declarations: declarations,
+            location: location
+        ))
+    }
+
+    private func makePropertyRule(
+        name: String,
+        declarations: [CSSKit.Declaration],
+        location: SourceLocation
+    ) -> PropertyRule {
         var syntaxStr: String?
         var inherits: Bool?
         var initialStr: String?
-        var descriptorsAreValid = true
+        var syntaxDescriptorIsValid = false
+        var inheritsDescriptorIsValid = false
 
         for decl in declarations {
             switch decl.name.lowercased() {
@@ -673,17 +686,22 @@ extension StylesheetBuilder {
                    parser.isExhausted
                 {
                     syntaxStr = value.value
+                    syntaxDescriptorIsValid = true
                 } else {
-                    descriptorsAreValid = false
+                    syntaxStr = nil
+                    syntaxDescriptorIsValid = false
                 }
             case "inherits":
                 switch decl.rawValue.lowercased() {
                 case "true":
                     inherits = true
+                    inheritsDescriptorIsValid = true
                 case "false":
                     inherits = false
+                    inheritsDescriptorIsValid = true
                 default:
-                    descriptorsAreValid = false
+                    inherits = nil
+                    inheritsDescriptorIsValid = false
                 }
             case "initial-value":
                 initialStr = decl.rawValue
@@ -692,7 +710,7 @@ extension StylesheetBuilder {
             }
         }
 
-        let nameParser = Parser(css: prelude)
+        let nameParser = Parser(css: name)
         let nameIsValid: Bool
         if case let .success(name) = CSSDashedIdent.parse(nameParser) {
             nameIsValid = name.value.count > 2 && nameParser.isExhausted
@@ -714,21 +732,22 @@ extension StylesheetBuilder {
             initialValue != nil
                 && initialValue?.isComputationallyIndependent == true
         )
-        let isValid = descriptorsAreValid
-            && nameIsValid
+        let isValid = nameIsValid
+            && syntaxDescriptorIsValid
+            && inheritsDescriptorIsValid
             && syntaxStr != nil
             && parsedSyntax != nil
             && inherits != nil
             && initialValueIsValid
 
-        return .property(PropertyRule(
-            name: prelude,
+        return PropertyRule(
+            name: name,
             syntax: syntax,
             inherits: inherits ?? false,
             initialValue: initialValue,
             isValid: isValid,
             location: location
-        ))
+        )
     }
 
     private func parseUnknownAtRule(
@@ -1317,40 +1336,9 @@ extension StylesheetBuilder {
             ))
 
         case let .property(name, location):
-            var syntaxStr = "*"
-            var inherits = false
-            var initialStr: String?
-
-            for decl in declarations {
-                switch decl.name.lowercased() {
-                case "syntax":
-                    let s = decl.rawValue
-                    if (s.hasPrefix("\"") && s.hasSuffix("\"")) || (s.hasPrefix("'") && s.hasSuffix("'")) {
-                        syntaxStr = String(s.dropFirst().dropLast())
-                    } else {
-                        syntaxStr = s
-                    }
-                case "inherits":
-                    inherits = decl.rawValue.lowercased() == "true"
-                case "initial-value":
-                    initialStr = decl.rawValue
-                default:
-                    break
-                }
-            }
-
-            let syntax = (try? CSSSyntaxString.parse(string: syntaxStr).get()) ?? .universal
-
-            var initialValue: CSSParsedComponent?
-            if let str = initialStr {
-                initialValue = try? syntax.parseValue(Parser(css: str)).get()
-            }
-
-            return .property(PropertyRule(
+            return .property(makePropertyRule(
                 name: name,
-                syntax: syntax,
-                inherits: inherits,
-                initialValue: initialValue,
+                declarations: declarations,
                 location: location
             ))
 

@@ -129,6 +129,13 @@ struct TypedParsingTests {
           syntax: "*";
           inherits: true;
         }
+        @property --last-descriptor-wins {
+          syntax: nope;
+          syntax: "<length>";
+          inherits: maybe;
+          inherits: false;
+          initial-value: 2px;
+        }
         """
         let properties: [PropertyRule] = CSSParser(css).stylesheet.rules.compactMap { rule in
             guard case let .property(property) = rule else {
@@ -137,7 +144,9 @@ struct TypedParsingTests {
             return property
         }
 
-        #expect(properties.map(\.isValid) == [true, false, false, false, false])
+        #expect(properties.map(\.isValid) == [
+            true, false, false, false, false, true,
+        ])
     }
 
     @Test("registered syntax parses a complete public string value")
@@ -146,6 +155,11 @@ struct TypedParsingTests {
 
         #expect(try syntax.parseValue("12px").get() == .length(.px(12)))
         #expect(syntax.parseValue("12px junk").isFailure)
+
+        let alternatives = try CSSSyntaxString.parse(
+            string: "<custom-ident> | <transform-list>"
+        ).get()
+        #expect((try? alternatives.parseValue("translateX(12px)").get()) != nil)
     }
 
     // MARK: - @scope Rule
