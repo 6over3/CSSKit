@@ -73,6 +73,16 @@ struct SelectorParsingTests {
         #expect(list.selectors[0].hasCombinator)
     }
 
+    @Test("Descendant combinator between class selectors")
+    func classDescendantCombinator() throws {
+        let list = try parse(".diagram .route")
+        #expect(list.selectors[0].components == [
+            .class("diagram"),
+            .combinator(.descendant),
+            .class("route"),
+        ])
+    }
+
     @Test("Child combinator")
     func childCombinator() throws {
         let list = try parse("div > p")

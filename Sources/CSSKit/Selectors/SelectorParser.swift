@@ -264,6 +264,16 @@ private enum SelectorParser {
         while true {
             let startState = input.state()
 
+            // `Parser.next()` skips whitespace. Check for it explicitly before
+            // parsing another simple selector so `.a .b` does not become the
+            // compound selector `.a.b`. Comments alone remain non-separating,
+            // as required by CSS Syntax.
+            if case .success(.whiteSpace) = input.nextIncludingWhitespace() {
+                input.reset(startState)
+                break
+            }
+            input.reset(startState)
+
             switch parseSimple(input, state: &state) {
             case let .success(component):
                 components.append(component)
