@@ -109,6 +109,8 @@ import CSSKitMacros
     _ = ("display", CSSDisplay.self)
     _ = ("visibility", CSSVisibility.self, CSSPropertyFlags.inherits)
     _ = ("box-sizing", CSSBoxSizing.self)
+    _ = ("object-fit", CSSObjectFit.self)
+    _ = ("object-position", CSSPosition.self)
 
     // MARK: - Overflow
 

@@ -50,6 +50,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     case maxInlineSize
     case boxSizing
     case aspectRatio
+    case objectFit
+    case objectPosition
 
     // MARK: - Overflow Properties
 
@@ -485,6 +487,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case .maxInlineSize: "max-inline-size"
         case .boxSizing: "box-sizing"
         case .aspectRatio: "aspect-ratio"
+        case .objectFit: "object-fit"
+        case .objectPosition: "object-position"
         case .overflow: "overflow"
         case .overflowX: "overflow-x"
         case .overflowY: "overflow-y"
@@ -821,6 +825,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case "max-inline-size": self = .maxInlineSize
         case "box-sizing": self = .boxSizing
         case "aspect-ratio": self = .aspectRatio
+        case "object-fit": self = .objectFit
+        case "object-position": self = .objectPosition
         case "overflow": self = .overflow
         case "overflow-x": self = .overflowX
         case "overflow-y": self = .overflowY

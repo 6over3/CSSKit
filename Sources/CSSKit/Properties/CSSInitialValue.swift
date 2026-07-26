@@ -206,6 +206,14 @@ extension CSSBoxSizing: CSSInitialValue {
     public static var initial: CSSBoxSizing { .contentBox }
 }
 
+extension CSSObjectFit: CSSInitialValue {
+    public static var initial: CSSObjectFit { .fill }
+}
+
+extension CSSPosition: CSSInitialValue {
+    public static var initial: CSSPosition { .center }
+}
+
 extension CSSZIndex: CSSInitialValue {
     public static var initial: CSSZIndex { .auto }
 }
