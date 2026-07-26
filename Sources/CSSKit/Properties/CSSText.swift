@@ -319,6 +319,52 @@ public enum CSSTextDecorationSkipInk: String, Equatable, Sendable, Hashable {
     case all
 }
 
+/// A value for the `text-underline-offset` property.
+/// https://www.w3.org/TR/css-text-decor-4/#text-underline-offset-property
+public enum CSSTextUnderlineOffset: Equatable, Sendable, Hashable {
+    /// The UA chooses an appropriate underline offset.
+    case auto
+    /// An explicit offset from the underline's automatic position.
+    case lengthPercentage(CSSLengthPercentage)
+}
+
+/// The position mode for the `text-underline-position` property.
+/// https://www.w3.org/TR/css-text-decor-4/#text-underline-position-property
+public enum CSSTextUnderlinePositionMode: String, Equatable, Sendable, Hashable {
+    /// The UA chooses an appropriate underline position.
+    case auto
+    /// Use the underline position defined by the first available font.
+    case fromFont = "from-font"
+    /// Place the underline below the element's content box.
+    case under
+}
+
+/// The side used for underlines in vertical writing modes.
+/// https://www.w3.org/TR/css-text-decor-4/#text-underline-position-property
+public enum CSSTextUnderlinePositionSide: String, Equatable, Sendable, Hashable {
+    /// Place the underline on the left side of the text.
+    case left
+    /// Place the underline on the right side of the text.
+    case right
+}
+
+/// A value for the `text-underline-position` property.
+/// https://www.w3.org/TR/css-text-decor-4/#text-underline-position-property
+public struct CSSTextUnderlinePosition: Equatable, Sendable, Hashable {
+    /// How the underline's primary position is selected.
+    public var mode: CSSTextUnderlinePositionMode
+    /// The optional side used in vertical writing modes.
+    public var side: CSSTextUnderlinePositionSide?
+
+    public init(
+        mode: CSSTextUnderlinePositionMode = .auto,
+        side: CSSTextUnderlinePositionSide? = nil
+    ) {
+        self.mode = mode
+        self.side = side
+    }
+}
+
 // MARK: - Text Emphasis
 
 /// A keyword for the fill mode in `text-emphasis-style`.
@@ -931,6 +977,76 @@ extension CSSTextDecorationSkipInk {
     }
 }
 
+extension CSSTextUnderlineOffset {
+    static func parse(_ input: Parser) -> Result<CSSTextUnderlineOffset, BasicParseError> {
+        if input.tryParse({ $0.expectIdentMatching("auto") }).isOK {
+            return .success(.auto)
+        }
+
+        return CSSLengthPercentage.parse(input).map(Self.lengthPercentage)
+    }
+}
+
+extension CSSTextUnderlinePosition {
+    static func parse(_ input: Parser) -> Result<CSSTextUnderlinePosition, BasicParseError> {
+        let firstLocation = input.currentSourceLocation()
+        guard case let .success(first) = input.expectIdent() else {
+            return .failure(input.newBasicError(.endOfInput))
+        }
+
+        switch first.lowercased() {
+        case "auto":
+            return .success(Self())
+        case "from-font", "under":
+            let mode: CSSTextUnderlinePositionMode =
+                first.lowercased() == "from-font" ? .fromFont : .under
+            let side = input.tryParse { input -> Result<CSSTextUnderlinePositionSide, BasicParseError> in
+                let location = input.currentSourceLocation()
+                guard case let .success(ident) = input.expectIdent() else {
+                    return .failure(input.newBasicError(.endOfInput))
+                }
+                guard let side = CSSTextUnderlinePositionSide(rawValue: ident.lowercased()) else {
+                    return .failure(location.newBasicUnexpectedTokenError(.ident(ident)))
+                }
+                return .success(side)
+            }
+            let parsedSide: CSSTextUnderlinePositionSide? = switch side {
+            case let .success(value): value
+            case .failure: nil
+            }
+            return .success(Self(
+                mode: mode,
+                side: parsedSide
+            ))
+        case "left", "right":
+            let side: CSSTextUnderlinePositionSide =
+                first.lowercased() == "left" ? .left : .right
+            let mode = input.tryParse { input -> Result<CSSTextUnderlinePositionMode, BasicParseError> in
+                let location = input.currentSourceLocation()
+                guard case let .success(ident) = input.expectIdent() else {
+                    return .failure(input.newBasicError(.endOfInput))
+                }
+                switch ident.lowercased() {
+                case "from-font": return .success(.fromFont)
+                case "under": return .success(.under)
+                default:
+                    return .failure(location.newBasicUnexpectedTokenError(.ident(ident)))
+                }
+            }
+            let parsedMode: CSSTextUnderlinePositionMode = switch mode {
+            case let .success(value): value
+            case .failure: .auto
+            }
+            return .success(Self(
+                mode: parsedMode,
+                side: side
+            ))
+        default:
+            return .failure(firstLocation.newBasicUnexpectedTokenError(.ident(first)))
+        }
+    }
+}
+
 extension CSSTextEmphasisFillMode {
     static func parse(_ input: Parser) -> Result<CSSTextEmphasisFillMode, BasicParseError> {
         let location = input.currentSourceLocation()
@@ -1427,6 +1543,33 @@ extension CSSTextDecoration: CSSSerializable {
 extension CSSTextDecorationSkipInk: CSSSerializable {
     public func serialize(dest: inout some CSSWriter) {
         dest.write(rawValue)
+    }
+}
+
+extension CSSTextUnderlineOffset: CSSSerializable {
+    public func serialize(dest: inout some CSSWriter) {
+        switch self {
+        case .auto:
+            dest.write("auto")
+        case let .lengthPercentage(value):
+            value.serialize(dest: &dest)
+        }
+    }
+}
+
+extension CSSTextUnderlinePosition: CSSSerializable {
+    public func serialize(dest: inout some CSSWriter) {
+        if mode != .auto {
+            dest.write(mode.rawValue)
+            if let side {
+                dest.write(" ")
+                dest.write(side.rawValue)
+            }
+        } else if let side {
+            dest.write(side.rawValue)
+        } else {
+            dest.write("auto")
+        }
     }
 }
 

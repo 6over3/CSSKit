@@ -450,6 +450,14 @@ extension CSSTextDecorationSkipInk: CSSInitialValue {
     public static var initial: CSSTextDecorationSkipInk { .auto }
 }
 
+extension CSSTextUnderlineOffset: CSSInitialValue {
+    public static var initial: CSSTextUnderlineOffset { .auto }
+}
+
+extension CSSTextUnderlinePosition: CSSInitialValue {
+    public static var initial: CSSTextUnderlinePosition { .init() }
+}
+
 // MARK: - SVG Rendering
 
 extension CSSColorInterpolation: CSSInitialValue {

@@ -585,4 +585,101 @@ struct TypedParsingTests {
         #expect(CSSPropertyId("overflow-block") == .overflowBlock)
         #expect(CSSPropertyId("overflow-inline") == .overflowInline)
     }
+
+    @Test("Underline controls parse as typed inherited properties")
+    func underlineControlProperties() throws {
+        let declarations = try CSSParser(
+            """
+            text-underline-offset: 12.5%;
+            text-underline-position: right under;
+            """
+        ).declarations
+
+        guard case let .textUnderlineOffset(.lengthPercentage(.percentage(offset))) =
+            declarations[0].value
+        else {
+            Issue.record("Expected typed text-underline-offset")
+            return
+        }
+        guard case let .textUnderlinePosition(position) = declarations[1].value else {
+            Issue.record("Expected typed text-underline-position")
+            return
+        }
+
+        #expect(offset == CSSPercentage(percent: 12.5))
+        #expect(position == .init(mode: .under, side: .right))
+        #expect(declarations[0].value.inherits)
+        #expect(declarations[1].value.inherits)
+        #expect(CSSPropertyId("text-underline-offset") == .textUnderlineOffset)
+        #expect(CSSPropertyId.textUnderlineOffset.name == "text-underline-offset")
+        #expect(CSSPropertyId.textUnderlineOffset.inherits)
+        #expect(CSSPropertyId("text-underline-position") == .textUnderlinePosition)
+        #expect(CSSPropertyId.textUnderlinePosition.name == "text-underline-position")
+        #expect(CSSPropertyId.textUnderlinePosition.inherits)
+        #expect(CSSTextUnderlineOffset.initial == .auto)
+        #expect(CSSTextUnderlinePosition.initial == .init())
+
+        var offsetWriter = StringCSSWriter()
+        declarations[0].value.serialize(dest: &offsetWriter)
+        var positionWriter = StringCSSWriter()
+        declarations[1].value.serialize(dest: &positionWriter)
+        #expect(offsetWriter.result == "12.5%")
+        #expect(positionWriter.result == "under right")
+    }
+
+    @Test("Underline position accepts its order-independent grammar")
+    func underlinePositionGrammar() throws {
+        let declarations = try CSSParser(
+            """
+            text-underline-position: auto;
+            text-underline-position: left;
+            text-underline-position: from-font right;
+            text-underline-position: left under;
+            """
+        ).declarations
+
+        let positions = declarations.compactMap { declaration -> CSSTextUnderlinePosition? in
+            guard case let .textUnderlinePosition(position) = declaration.value else {
+                return nil
+            }
+            return position
+        }
+
+        #expect(positions == [
+            .init(),
+            .init(side: .left),
+            .init(mode: .fromFont, side: .right),
+            .init(mode: .under, side: .left),
+        ])
+        let serialized = declarations.map { declaration in
+            var writer = StringCSSWriter()
+            declaration.value.serialize(dest: &writer)
+            return writer.result
+        }
+        #expect(serialized == [
+            "auto",
+            "left",
+            "from-font right",
+            "under left",
+        ])
+    }
+
+    @Test("Underline position rejects conflicting grammar components")
+    func invalidUnderlinePositionGrammar() throws {
+        let declarations = try CSSParser(
+            """
+            text-underline-position: auto left;
+            text-underline-position: under auto;
+            text-underline-position: left right;
+            """
+        ).declarations
+
+        #expect(declarations.count == 3)
+        for declaration in declarations {
+            guard case .textUnderlinePosition = declaration.value else {
+                continue
+            }
+            Issue.record("Expected conflicting underline position to remain unparsed")
+        }
+    }
 }

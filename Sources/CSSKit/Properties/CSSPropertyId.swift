@@ -337,6 +337,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     case textDecorationThickness
     case textDecoration
     case textDecorationSkipInk
+    case textUnderlineOffset
+    case textUnderlinePosition
     case textEmphasisStyle
     case textEmphasisColor
     case textEmphasis
@@ -701,6 +703,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case .textDecorationThickness: "text-decoration-thickness"
         case .textDecoration: "text-decoration"
         case .textDecorationSkipInk: "text-decoration-skip-ink"
+        case .textUnderlineOffset: "text-underline-offset"
+        case .textUnderlinePosition: "text-underline-position"
         case .textEmphasisStyle: "text-emphasis-style"
         case .textEmphasisColor: "text-emphasis-color"
         case .textEmphasis: "text-emphasis"
@@ -1035,6 +1039,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case "text-decoration-thickness": self = .textDecorationThickness
         case "text-decoration": self = .textDecoration
         case "text-decoration-skip-ink": self = .textDecorationSkipInk
+        case "text-underline-offset": self = .textUnderlineOffset
+        case "text-underline-position": self = .textUnderlinePosition
         case "text-emphasis-style": self = .textEmphasisStyle
         case "text-emphasis-color": self = .textEmphasisColor
         case "text-emphasis": self = .textEmphasis
@@ -1154,7 +1160,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case .textAlign, .textAlignLast, .textJustify, .textTransform, .textIndent,
              .textShadow, .textEmphasis, .textEmphasisStyle, .textEmphasisColor,
              .textEmphasisPosition, .letterSpacing, .wordSpacing, .whiteSpace,
-             .wordBreak, .lineBreak, .hyphens, .overflowWrap, .wordWrap, .tabSize:
+             .wordBreak, .lineBreak, .hyphens, .overflowWrap, .wordWrap, .tabSize,
+             .textDecorationSkipInk, .textUnderlineOffset, .textUnderlinePosition:
             true
 
         // Writing mode
