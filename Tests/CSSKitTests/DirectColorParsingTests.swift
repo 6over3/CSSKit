@@ -158,4 +158,26 @@ struct DirectColorParsingTests {
             Issue.record("Failed to parse color() function")
         }
     }
+
+    @Test("RGB components clamp at parsed-value time")
+    func parsedValueClamping() throws {
+        let rgb = try #require(parsedColor(
+            "rgb(-20 300 50% / 120%)"
+        ))
+        #expect(rgb == .rgba(RgbaLegacy(
+            red: 0,
+            green: 255,
+            blue: 127.5,
+            alpha: 1
+        )))
+
+    }
+}
+
+private func parsedColor(_ css: String) -> Color? {
+    let parser = Parser(ParserInput(css))
+    guard case let .success(color) = Color.parse(parser) else {
+        return nil
+    }
+    return color
 }

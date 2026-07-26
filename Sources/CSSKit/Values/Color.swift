@@ -888,7 +888,12 @@ private func parseRgb<P: ColorParser>(
         }
     }
 
-    return .success(P.Output.makeRgba(red: red, green: green, blue: blue, alpha: alpha))
+    return .success(P.Output.makeRgba(
+        red: red.clamped(to: 0.0 ... 255.0),
+        green: green.clamped(to: 0.0 ... 255.0),
+        blue: blue.clamped(to: 0.0 ... 255.0),
+        alpha: alpha
+    ))
 }
 
 // MARK: - HSL Parsing
