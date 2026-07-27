@@ -108,6 +108,8 @@ import CSSKitMacros
 
     _ = ("display", CSSDisplay.self)
     _ = ("visibility", CSSVisibility.self, CSSPropertyFlags.inherits)
+    _ = ("float", CSSFloat.self)
+    _ = ("clear", CSSClear.self)
     _ = ("box-sizing", CSSBoxSizing.self)
     _ = ("object-fit", CSSObjectFit.self)
     _ = ("object-position", CSSPosition.self)

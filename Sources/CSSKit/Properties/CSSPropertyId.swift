@@ -33,6 +33,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
     case color
     case display
     case visibility
+    case float
+    case clear
 
     // MARK: - Sizing Properties
 
@@ -473,6 +475,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case .color: "color"
         case .display: "display"
         case .visibility: "visibility"
+        case .float: "float"
+        case .clear: "clear"
         case .width: "width"
         case .height: "height"
         case .minWidth: "min-width"
@@ -811,6 +815,8 @@ public enum CSSPropertyId: Hashable, Equatable, Sendable {
         case "color": self = .color
         case "display": self = .display
         case "visibility": self = .visibility
+        case "float": self = .float
+        case "clear": self = .clear
         case "width": self = .width
         case "height": self = .height
         case "min-width": self = .minWidth

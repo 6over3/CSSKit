@@ -586,6 +586,24 @@ struct TypedParsingTests {
         #expect(CSSPropertyId("overflow-inline") == .overflowInline)
     }
 
+    @Test("Float and clear parse as typed logical properties")
+    func floatAndClearProperties() throws {
+        let declarations = try CSSParser(
+            "float: inline-start; clear: both"
+        ).declarations
+
+        guard case .float(.inlineStart) = declarations[0].value else {
+            Issue.record("Expected typed float")
+            return
+        }
+        guard case .clear(.both) = declarations[1].value else {
+            Issue.record("Expected typed clear")
+            return
+        }
+        #expect(CSSPropertyId("float") == .float)
+        #expect(CSSPropertyId("clear") == .clear)
+    }
+
     @Test("Underline controls parse as typed inherited properties")
     func underlineControlProperties() throws {
         let declarations = try CSSParser(
